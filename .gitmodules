@@ -1,0 +1,6 @@
+[submodule "lib/unfold"]
+	path = lib/unfold
+	url = https://github.com/unfoldtoolbox/unfold
+[submodule "lib/eeglab"]
+	path = lib/eeglab
+	url = https://github.com/sccn/eeglab

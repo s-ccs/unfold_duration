@@ -1,0 +1,75 @@
+# Duration effects in ERPs
+
+# Introduction
+
+- Real world situation, events have different duration. Most prominently Fixation durations and audio stimulus durations (XXX third example).
+- But also in laboratory situation, e.g. different presentation times over experiments, stimulus duration controlled by buttonpress, XXX
+
+"From ERP research, we know that the processing of one stimulus can change the processing of the next one due to adaptation, habituation, or priming  Schweinberger & Neumann"
+
+- I will refer to all these situation with the event duration effect. This effect is rarely modelled.
+
+- What is common to some of these situations is, that an event is directly followed by another event. This can be seen as an overlapping situation, and appropriate overlap correction should be used.
+- Quick discussion on unfold-type deconvolution.
+
+- As discussed in earlier publication, most overla correction methods by deconvolution assume that the ERP-kernel is constant for all distances. As acknowledged as a limitation by some authors, this is clearly not the case.
+
+- My proposed solution here is to incorporate the event duration as a predictor in the multiple regression model
+
+- Because not much is known about overlap effects, both linear and non-linear forms of overlap are compared.
+
+- Olaf: Amplitude on N170, no duration effect.
+
+- I will demonstrate the effectivity with a set of simulations, varying the amount of overlap, the kernel-shape, different signal to noise levels
+- I will then model different fixation durations and reaction times in a free viewing and a decision making task respectively.
+
+Ultimately this method seems to work well. Limiting cases are when overlap and 
+
+# Methods
+## Methods Simulation
+
+
+
+## Methods Free Viewing
+
+## Methods Decision Making
+
+
+# Results
+## Results Simulation
+Different Shapes:
+Box-car, Hanning, PosNegPos
+=> Shape has a strong influence on recoverability
+
+Amount of Overlap
+=> Artefacts occur when increasing overlap
+
+Noise
+=> Plot different amounts of noise on recovered image
+
+
+## Results Free Viewing
+
+## Results Decision Making
+
+
+# Discussion
+
+## Assumptions
+
+
+## Limitations
+    - Collinearity
+
+
+## Applications
+
+
+
+-------
+Duration effects: 
+p1/n1 not affected (50,150,250 Nico Busch Size matters)
+Word length n400 (300 vs. 750ms) Mäkelä 2001
+auditory ISI  Pereira 2014,[600 1000 3000 6000]
+faces [17,33,50,67,83,100,200], amplitude differences but no latency
+
