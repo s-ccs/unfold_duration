@@ -7,7 +7,7 @@ EEG = uf_designmat(EEG,cfgDesign);
 
 %     fun = 'splines';
 cfgTimeexpand = struct();
-cfgTimeexpand.timelimits = [-.5 T_event/EEG.srate];
+cfgTimeexpand.timelimits = [-.5 2];
 
 EEG = uf_timeexpandDesignmat(EEG,cfgTimeexpand);
 % end
