@@ -9,6 +9,7 @@ T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 
 
 for iter = 1:50
+for durEffect = 0%[0 1]
 for shape = {'box','posNeg','posNegPos','hanning'}
     for overlap = [0 1]
         for overlapdistribution ={'uniform','halfnormal'}
@@ -16,7 +17,7 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                 for overlapModifier = [1 1.5 2]
                     rng(iter) % same seed
                     %% Simulate data with the given properties
-                    EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event);
+                    EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event,durEffect);
                     center= quantile([EEG.event.dur],linspace( 1/(10+1), 1-1/(10+1), 10));
                     binEdges = conv([-inf center inf], [0.5, 0.5], 'valid');
                     [~,~,indx] = histcounts([EEG.event.dur],binEdges);
@@ -53,7 +54,7 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                         end
                         
                         %% save it
-                        filename = sprintf('%s_overlap-%i_%s_noise-%.2f_%s_iter-%i_overlapmod-%.1f.mat',shape{1},overlap,overlapdistribution{1},noise,formula{1},iter,overlapModifier);
+                        filename = sprintf('%s_overlap-%i_%s_noise-%.2f_%s_durEffect-%i_iter-%i_overlapmod-%.1f.mat',shape{1},overlap,overlapdistribution{1},noise,formula{1},durEffect,iter,overlapModifier);
                         if ~exist(fullfile('local','sim'),'dir')
                             mkdir(fullfile('local','sim'))
                         end
@@ -64,5 +65,6 @@ for shape = {'box','posNeg','posNegPos','hanning'}
             end
         end
     end
+end
 end
 end

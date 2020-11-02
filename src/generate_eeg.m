@@ -1,25 +1,13 @@
-function EEG = generate_eeg(EEG,shape,overlap,overlapdistribution,noise,overlapModifier,N_event,T_event)
+function EEG = generate_eeg(EEG,shape,overlap,overlapdistribution,noise,overlapModifier,N_event,T_event,durEffect)
 
 options = struct();
 options.overlap = overlap; % 0 deactivates overlap
 options.shape = shape;
 options.noise = noise;
-
-%options.shape = "posNegPos";
-%      options.shape = "hanning";
-
-options.overlapdistribution = overlapdistribution;%"uniform";
-%     options.overlapdistribution = "halfnormal";
+options.overlapdistribution = overlapdistribution;
 options.overlapModifier= overlapModifier;
+options.durEffect = durEffect;
 
-
-
-
-
-
-
-
-% event_lat = randi(EEG.pnts - T_event,N_event);
 %-------------------------------
 % generate event-timings
 switch options.overlapdistribution
@@ -51,8 +39,15 @@ for e = 1:length(event_lat(1:end-1))
     evt2 = event_lat(e + 1);
     dur = evt2-evt1;
     
+    if options.durEffect
+        % duration effects shape
+          sigduration = dur*options.overlapModifier;
+    else
+        % duration does not effect shape
+        sigduration = mean(diff([EEG.event.latency]));
+    end
     % starting sample
-    sig = generate_signal_kernel(dur*options.overlapModifier,options.shape,EEG.srate);
+    sig = generate_signal_kernel(sigduration,options.shape,EEG.srate);
     start = find(sig~=0,1);
     EEG.event(e).dur = dur./EEG.srate;
     EEG.event(e).sigdur = (find(sig(start:end)==0,1)+start)./EEG.srate;
@@ -73,4 +68,5 @@ EEG.event(end) = [];
 EEG.data(1,:) = sig1_tmp;%(1:EEG.pnts);
 EEG.data(1,:) = EEG.data(1,:) + options.noise * randn(size(EEG.data));
 EEG.pnts = size(EEG.data,2);
+EEG.sim.sigAll = sigAll;
 EEG = eeg_checkset(EEG);
