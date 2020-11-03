@@ -1,3 +1,4 @@
+% Run a bunch of simulations (~20GB space if all combinations are used)
 
 rng(1) % same seed
 ufresult_all = {};

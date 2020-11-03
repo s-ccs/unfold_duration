@@ -1,4 +1,4 @@
-
+% Further preprocessing of the ERP core dataset
 for sub = 1:40
 %%
     filename = ['C:/Users/behinger/Downloads/P3_clean/' num2str(sub) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted.set'];
