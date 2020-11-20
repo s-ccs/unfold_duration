@@ -3,14 +3,14 @@
 tmp_fn = dir(fullfile('local','sim','*.mat'));
 tmp_fn = {tmp_fn.name};
 fn = cellfun(@(x)strsplit(x,'_'),tmp_fn,'UniformOutput',false);
-fn = cell2table(cat(1,fn{:}),'VariableNames',{'shape','overlap','overlapdist','noise','formula','iter','overlapmod'});
+fn = cell2table(cat(1,fn{:}),'VariableNames',{'shape','overlap','overlapdist','noise','formula','durEffect','iter','overlapmod'});
 
 %fn = parse_column(fn,'overlap');
 %fn = parse_column(fn,'noise');
 fn.filename = tmp_fn';
 
-all_b = nan(height(fn),1,200,11);
-all_bnodc = nan(height(fn),1,200,11);
+all_b = nan(height(fn),1,250,11); % needed change to 250 (maybe because of durEffect); was 200
+all_bnodc = nan(height(fn),1,250,11);
 for r = 1:height(fn)
     fprintf("Loading :%i/%i\n",r,height(fn))
     
