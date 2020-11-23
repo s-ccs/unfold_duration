@@ -92,7 +92,7 @@ for e = 1:length(event_lat(1:end-1))
     EEG.event(e).latency = evt1;
     
     % automatically prolong the signal
-    if ~((evt1+T_event-1)<size(sig1_tmp,2))
+    if ~((evt1+size(sig1,1))<size(sig1_tmp,2))%((evt1+T_event-1)<size(sig1_tmp,2))  <--- Check if this is valid!!
         sig1_tmp(size(sig1_tmp,2)+1:(evt1+size(sig1,1)-1)) = 0;
     end
     % Add current sig to total sig

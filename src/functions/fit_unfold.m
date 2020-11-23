@@ -1,7 +1,7 @@
 function ufresult_marginal = fit_unfold(EEG,formula,T_event)
 cfgDesign = [];
-cfgDesign.formula = formula;
-cfgDesign.eventtypes = 'eventA';
+cfgDesign.formula = {formula};
+cfgDesign.eventtypes = {'eventA'};
 EEG = uf_designmat(EEG,cfgDesign);
 
 
