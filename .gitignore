@@ -1,3 +1,4 @@
 /local
 *.asv
 *.m~
+/stash

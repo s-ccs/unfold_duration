@@ -2,15 +2,15 @@
 tic;
 rng(1) % same seed
 ufresult_all = {};
-N_event = 500; % max number of events
+N_event = 1000; % max number of events
 emptyEEG = eeg_emptyset();
 emptyEEG.srate = 100; %Hz
 emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 
 
-for iter = 1%1:50
-for durEffect = 1
+for iter = 1:50
+for durEffect = [0 1]
 for shape = {'box','posNeg','posNegPos','hanning'}
     for overlap = [0 1]
         for overlapdistribution ={'uniform','halfnormal'}
@@ -22,11 +22,11 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                     center= quantile([EEG.event.dur],linspace( 1/(10+1), 1-1/(10+1), 10));
                     binEdges = conv([-inf center inf], [0.5, 0.5], 'valid');
                     [~,~,indx] = histcounts([EEG.event.dur],binEdges);
+                    k = 1;
                     for e = 1:length(EEG.event)
-                        try
-                            EEG.event(e).durbin = binEdges(indx(e));
-                        catch
-                            EEG.event(e).durbin = [];
+                        if ~isempty(EEG.event(e).dur)
+                            EEG.event(e).durbin = binEdges(indx(k));
+                            k = k + 1;
                         end
                     end
                     
@@ -41,8 +41,8 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                         if formula{1} == "theoretical"
                             % in this case we produce the "ideal" simulation
                             % kernel
-                            assert(length(ufresult_marginal.param) == 11) % make sure we are correct here; What is supposed to be correct?
-                            durations = [ufresult_marginal.param(2:end).value];
+                            assert(length(ufresult_marginal.param) == 12) % make sure we are correct here; What is supposed to be correct?
+                            durations = [ufresult_marginal.param(2:end-1).value];
                             tmin = sum(ufresult_marginal.times<=0);
                             sig = nan(size(ufresult_marginal.beta));
                             for d = 1:length(durations)
@@ -59,10 +59,10 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                         
                         %% save it
                         filename = sprintf('%s_overlap-%i_%s_noise-%.2f_%s_durEffect-%i_iter-%i_overlapmod-%.1f.mat',shape{1},overlap,overlapdistribution{1},noise,formula{1},durEffect,iter,overlapModifier);
-                        if ~exist(fullfile('local','sim2'),'dir')
-                            mkdir(fullfile('local','sim2'))
+                        if ~exist(fullfile('local','sim2-1'),'dir')
+                            mkdir(fullfile('local','sim2-1'))
                         end
-                        save(fullfile('local','sim2',filename),'ufresult_marginal')
+                        save(fullfile('local','sim2-1',filename),'ufresult_marginal')
                     end
                     
                 end

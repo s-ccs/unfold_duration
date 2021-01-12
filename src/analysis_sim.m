@@ -1,6 +1,10 @@
 %% -----------
 %load data
-tmp_fn = dir(fullfile('local','sim','*.mat'));
+folder = 'sim2'; % Change to desired folder;
+                   % 1 = initial simulation; 2 = 2 event simulations; 
+                   % 2-1 = 2 events, double trials; 3 = real events
+                   
+tmp_fn = dir(fullfile('local',folder,'*.mat'));
 tmp_fn = {tmp_fn.name};
 fn = cellfun(@(x)strsplit(x,'_'),tmp_fn,'UniformOutput',false);
 fn = cell2table(cat(1,fn{:}),'VariableNames',{'shape','overlap','overlapdist','noise','formula','durEffect','iter','overlapmod'});
@@ -14,17 +18,22 @@ all_bnodc = nan(height(fn),1,250,11);
 for r = 1:height(fn)
     fprintf("Loading :%i/%i\n",r,height(fn))
     
-    tmp = load(fullfile('local','sim',fn.filename{r}));
-    b = tmp.ufresult_marginal.beta;
-    b_nodc = tmp.ufresult_marginal.beta_nodc;
+    tmp = load(fullfile('local',folder,fn.filename{r}));
     if strcmp(fn{r,'formula'},'y~1')
-        b = repmat(b,1,1,11);
-        b_nodc = repmat(b_nodc,1,1,11);
+        %         continue
+        b = tmp.ufresult_marginal.beta;
+        b_nodc = tmp.ufresult_marginal.beta_nodc;
+        b = repmat(b(:,:,1),1,1,11);
+        b_nodc = repmat(b_nodc(:,:,1),1,1,11);
+    else
+        b = tmp.ufresult_marginal.beta(:,:,1:11);
+        b_nodc = tmp.ufresult_marginal.beta_nodc(:,:,1:11);
     end
     
     if strcmp(fn{r,'formula'},'y~1+cat(durbin)')
-        b(:,:,2:end+1) = b(:,:,1:end);
-        b_nodc(:,:,2:end+1) = b_nodc(:,:,1:end);
+        continue
+%         b(:,:,2:end+1) = b(:,:,1:end);
+%         b_nodc(:,:,2:end+1) = b_nodc(:,:,1:end);
     end
     
     all_b(r,:,:,:) = b;
@@ -35,12 +44,13 @@ end
 
 fn.beta = squeeze(all_b);
 fn.beta_nodc = squeeze(all_bnodc);
-fn.folder =repmat({'sim'},1,height(fn))';
+fn.folder =repmat({folder},1,height(fn))';
 %%
-%tmp = load(fullfile('local','sim',fn.filename{1}));
+%tmp = load(fullfile('local',folder,fn.filename{1}));
 
-ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-2.0.mat" & fn.shape == "box" & fn.noise=="noise-0.00"&fn.overlap=="overlap-1";
-ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"&fn.overlap=="overlap-1";
+% ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-2.0.mat" & fn.shape == "box" & fn.noise=="noise-0.00"&fn.overlap=="overlap-1";
+ix  = fn.durEffect == "durEffect-1" & fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"& fn.overlap=="overlap-1" & fn.formula ~= "y~1";
+% ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"&fn.overlap=="overlap-0"& fn.formula ~= "y~1";
 %ix = fn.overlapdist == "uniform" & fn.shape=="box" & fn.overlapmod == "overlapmod-1.5.mat" 
 plot_result(fn(ix,:))
 
@@ -53,7 +63,7 @@ for r = 1:height(fn)
     
     % check rows except formula
     ix = cellfun(@(x,ix)strcmp(x,fn{:,ix}),row{:,[1:4 6:7]},num2cell([1:4 6:7]),'UniformOutput',false);
-    ix_theo = all(cat(2,ix{:}),2) & fn.formula == "theoretical";
+    ix_theo = all(cat(2,ix{:}),2) & fn.formula == "theoretical" & fn.overlapmod == "overlapmod-1.0.mat";
     assert(sum(ix_theo) == 1)
     y_true = fn{ix_theo,'beta'}(:,:,2:end);
     y_true(isnan(y_true(:))) = 0;
@@ -68,7 +78,7 @@ for r = 1:height(fn)
     ix = cellfun(@(x,ix)strcmp(x,fn{:,ix}),row{:,[1:4 6:7]},num2cell([1:4 6:7]),'UniformOutput',false);
 
     % normalize MSE by y~1
-    ix_intercept = all(cat(2,ix{:}),2) & fn.formula == "y~1";
+    ix_intercept = all(cat(2,ix{:}),2) & fn.formula == "y~1" & fn.overlapmod == "overlapmod-1.0.mat";
     assert(sum(ix_intercept) == 1)
     
     fn{r,'normMSE'} = fn{r,'MSE'}/fn{ix_intercept,'MSE'};
@@ -95,4 +105,4 @@ ix = fn.filename == "box_overlap-0_uniform_noise-0.00_y~1+spl(dur,10)_overlapmod
 histogram(fn{ix,'ufresult'}.unfold.splines{1}.paramValues,100)
 
 %% save table and ERPs individually
-writetable(fn(:,[1:8 11 12]),'local/2020-09-24_simulationResults.csv')
+writetable(fn(:,[1:8 11 12]),'local/2020-12-14_simulationResults.csv')

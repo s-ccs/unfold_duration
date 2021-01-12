@@ -1,4 +1,7 @@
 addpath(genpath('src'))
+addpath('/store/projects/skukies/eeglab')
+addpath('/store/projects/skukies/unfold')
+addpath('/store/projects/skukies/gramm')
 addpath('lib/ScientificColourMaps6/')
-run('lib\eeglab\eeglab.m')
-run('lib\unfold\init_unfold.m')
+eeglab;
+init_unfold;

@@ -6,7 +6,7 @@ for k = 1:height(fn_small)
     u = u.(fn{1});
     % matlab table is currentlz 1 x chan x time x pred, to remove the 1x
     % but not potential chan == 1, we use permute
-    if fn_small.folder{k} == "p3"
+    if (fn_small.folder{k} == "p3") || (fn_small.folder{k} == "N400") 
         % some transformation have been made
         u.beta = permute(fn_small.beta(k,:,:,:),[2 3 4 1]);
         u.beta_nodc = permute(fn_small.beta_nodc(k,:,:,:),[2 3 4 1]);
@@ -20,7 +20,7 @@ for k = 1:height(fn_small)
         u.param.name = fn_small{k,'formula'}{1};
         u.param.event = table2cell(fn_small(k,indicatorCols));
     else
-        if length(u.param) == 11
+        if length(u.param) == 11 || length(u.param) == 12
             % simulation
             % spline case, remove the intercept
            del = ~strcmp({u.param.name},'dur');
@@ -29,13 +29,18 @@ for k = 1:height(fn_small)
             del = []; 
             
         end
+        
+        if length(u.param) == 12
+            del(end) = 1;
+        end
+            
     
         
         u.param(del) = [];        
         u.beta(:,:,del) = [];
         u.beta_nodc(:,:,del) = [];
         for j = 1:length(u.param)
-               if fn_small.folder{k} == "p3"
+               if (fn_small.folder{k} == "p3") || (fn_small.folder{k} == "N400")
                    % this should be refactored to be a plotting option
                    u.param(j).name = strjoin([u.param(j).name,fn_small{k,'formula'}(1)]);
                    
