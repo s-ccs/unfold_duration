@@ -1,9 +1,15 @@
-function ufresult_marginal = fit_unfold(EEG,formula,T_event)
-cfgDesign = [];
-cfgDesign.formula = {formula, 'y~1'};
-cfgDesign.eventtypes = {'eventA', 'eventB'};
-EEG = uf_designmat(EEG,cfgDesign);
-
+function ufresult_marginal = fit_unfold(EEG,formula,T_event, twoEvent)
+if ~twoEvent
+    cfgDesign = [];
+    cfgDesign.formula = {formula};
+    cfgDesign.eventtypes = {'eventA'};
+    EEG = uf_designmat(EEG,cfgDesign);
+else
+    cfgDesign = [];
+    cfgDesign.formula = {formula, 'y~1'};
+    cfgDesign.eventtypes = {'eventA', 'eventB'};
+    EEG = uf_designmat(EEG,cfgDesign);
+end
 
 %     fun = 'splines';
 cfgTimeexpand = struct();

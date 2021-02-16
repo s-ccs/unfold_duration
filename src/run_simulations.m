@@ -7,10 +7,11 @@ emptyEEG = eeg_emptyset();
 emptyEEG.srate = 100; %Hz
 emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
-
+harmonize = 1; % Harmonize shape of Kernel? 1 = Yes; 0 = No
+saveFolder = "sim_harm"; % Folder to save in
 
 for iter = 1:50
-for durEffect = 1
+for durEffect = [0 1]
 for shape = {'box','posNeg','posNegPos','hanning'}
     for overlap = [0 1]
         for overlapdistribution ={'uniform','halfnormal'}
@@ -18,7 +19,7 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                 for overlapModifier = [1 1.5 2]
                     rng(iter) % same seed
                     %% Simulate data with the given properties
-                    EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event,durEffect);
+                    EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event,durEffect,harmonize);
                     center= quantile([EEG.event.dur],linspace( 1/(10+1), 1-1/(10+1), 10));
                     binEdges = conv([-inf center inf], [0.5, 0.5], 'valid');
                     [~,~,indx] = histcounts([EEG.event.dur],binEdges);
@@ -43,7 +44,7 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                             tmin = sum(ufresult_marginal.times<=0);
                             sig = nan(size(ufresult_marginal.beta));
                             for d = 1:length(durations)
-                                tmp= generate_signal_kernel(durations(d)*EEG.srate*overlapModifier,shape{1},EEG.srate);
+                                tmp= generate_signal_kernel(durations(d)*EEG.srate*overlapModifier,shape{1},EEG.srate,harmonize);
                                 sig(1,tmin+1:min(tmin+length(tmp),end),d+1) = tmp(1:min(end,size(sig,2)-tmin));
                             end
                             
@@ -51,15 +52,15 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                             ufresult_marginal.beta      = sig;
                             ufresult_marginal.beta_nodc = sig;
                         else
-                            ufresult_marginal = fit_unfold(EEG,formula{1},T_event);
+                            ufresult_marginal = fit_unfold(EEG,formula{1},T_event, 0);
                         end
                         
                         %% save it
                         filename = sprintf('%s_overlap-%i_%s_noise-%.2f_%s_durEffect-%i_iter-%i_overlapmod-%.1f.mat',shape{1},overlap,overlapdistribution{1},noise,formula{1},durEffect,iter,overlapModifier);
-                        if ~exist(fullfile('local','sim'),'dir')
-                            mkdir(fullfile('local','sim'))
+                        if ~exist(fullfile('local',saveFolder),'dir')
+                            mkdir(fullfile('local',saveFolder))
                         end
-                        save(fullfile('local','sim',filename),'ufresult_marginal')
+                        save(fullfile('local',saveFolder,filename),'ufresult_marginal');
                     end
                     
                 end

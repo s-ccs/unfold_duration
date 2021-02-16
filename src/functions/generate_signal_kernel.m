@@ -1,8 +1,14 @@
-function sig = generate_signal_kernel(dur,shape,srate)
+function sig = generate_signal_kernel(dur,shape,srate, harmonize)
 start = 0.05*srate; 
 stop = dur;
 assert(stop>3*start,'signal duration is too short')
-eventsamples =round(start:stop);
+
+if ~harmonize
+    eventsamples =round(start:stop);
+else
+    eventsamples =round(start:stop+(2*start));
+end
+
 sig = zeros(round(2*length(eventsamples)),1);
 
 switch shape

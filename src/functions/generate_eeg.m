@@ -1,4 +1,4 @@
-function EEG = generate_eeg(EEG,shape,overlap,overlapdistribution,noise,overlapModifier,N_event,T_event,durEffect)
+function EEG = generate_eeg(EEG,shape,overlap,overlapdistribution,noise,overlapModifier,N_event,T_event,durEffect,harmonize)
 
 options = struct();
 options.overlap = overlap; % 0 deactivates overlap
@@ -47,7 +47,7 @@ for e = 1:length(event_lat(1:end-1))
         sigduration = mean(diff([EEG.event.latency]));
     end
     % starting sample
-    sig = generate_signal_kernel(sigduration,options.shape,EEG.srate);
+    sig = generate_signal_kernel(sigduration,options.shape,EEG.srate,harmonize);
     start = find(sig~=0,1);
     EEG.event(e).dur = dur./EEG.srate;
     EEG.event(e).sigdur = (find(sig(start:end)==0,1)+start)./EEG.srate;
@@ -58,7 +58,7 @@ for e = 1:length(event_lat(1:end-1))
         EEG.event(e).latency = evt1;
     end
     % automatically prolong the signal
-    if ~((evt1+T_event-1)<size(sig1_tmp,2))
+    if ~((evt1+size(sig,1)-1)<size(sig1_tmp,2))%((evt1+T_event-1)<size(sig1_tmp,2))  <--- Check if this is valid!!
         sig1_tmp(size(sig1_tmp,2)+1:(evt1+size(sig,1)-1)) = 0;
     end
     sig1_tmp(evt1:evt1+size(sig,1)-1) = sig1_tmp(evt1:evt1+size(sig,1)-1)'+sig;

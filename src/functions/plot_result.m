@@ -11,7 +11,7 @@ for k = 1:height(fn_small)
         u.beta = permute(fn_small.beta(k,:,:,:),[2 3 4 1]);
         u.beta_nodc = permute(fn_small.beta_nodc(k,:,:,:),[2 3 4 1]);
     end
-    [indicatorNames,indicatorCols] = setdiff(fn_small.Properties.VariableNames,"formula");
+    [indicatorNames,indicatorCols] = setdiff(fn_small.Properties.VariableNames,["normMSE","formula"]);
     rem = strcmp(indicatorNames,"beta")| strcmp(indicatorNames,"beta_nodc") | strcmp(indicatorNames,"MSE")| strcmp(indicatorNames,"filename");
     indicatorCols(rem) = [];
     
@@ -20,7 +20,7 @@ for k = 1:height(fn_small)
         u.param.name = fn_small{k,'formula'}{1};
         u.param.event = table2cell(fn_small(k,indicatorCols));
     else
-        if length(u.param) == 11 || length(u.param) == 12
+        if length(u.param) == 11 %|| length(u.param) == 12
             % simulation
             % spline case, remove the intercept
            del = ~strcmp({u.param.name},'dur');
@@ -30,9 +30,9 @@ for k = 1:height(fn_small)
             
         end
         
-        if length(u.param) == 12
-            del(end) = 1;
-        end
+%         if length(u.param) == 12
+%             del(end) = 1;
+%         end
             
     
         

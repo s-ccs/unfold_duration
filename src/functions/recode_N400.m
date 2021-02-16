@@ -22,18 +22,18 @@ for e = 1:length(event)
     switch event(e).type
         % Primer
         case {111, 112}
-            event(e).eventtype = 'Prime';
-            event(e).pairtype = 'related';
+            event(e).eventtype = 'relPrime';
+            event(e).cond = 'related';
             event(e).rt = 0;
         case {121, 122}
-            event(e).eventtype = 'Prime';
-            event(e).pairtype = 'unrelated';
+            event(e).eventtype = 'unrelPrime';
+            event(e).cond = 'unrelated';
             event(e).rt = 0;
             
-        % Target stimuli    
+            % Target stimuli
         case {211, 212}
-            event(e).eventtype = 'Target';
-            event(e).pairtype = 'related';
+            event(e).eventtype = 'rel_Target';
+            event(e).cond = 'related';
             % Check response
             if any(event(e+1).type == [201 202])
                 event(e).rt = event(e+1).latency - event(e).latency;
@@ -46,8 +46,8 @@ for e = 1:length(event)
                 event(e).rt = 0;
             end
         case {221, 222}
-            event(e).eventtype = 'Target';
-            event(e).pairtype = 'unrelated';
+            event(e).eventtype = 'unrel_Target';
+            event(e).cond = 'unrelated';
             if any(event(e+1).type == [201 202])
                 event(e).rt = event(e+1).latency - event(e).latency;
                 if event(e+1).type == 201
@@ -58,21 +58,34 @@ for e = 1:length(event)
             else
                 event(e).rt = 0;
             end
-        % Responses
+            
+            % Responses
         case 201
             event(e).accuracy = 'correct';
             event(e).eventtype = 'response';
             event(e).rt = event(e).latency - event(e-1).latency;
+            if strcmp(event(e-1).cond, 'related')
+                event(e).cond = 'related';
+            elseif strcmp(event(e-1).cond, 'unrelated')
+                event(e).cond = 'unrelated';
+            end
         case 202
             event(e).accuracy = 'incorrect';
             event(e).eventtype = 'response';
             event(e).rt = event(e).latency - event(e-1).latency;
+            if strcmp(event(e-1).cond, 'related')
+                event(e).cond = 'related';
+            elseif strcmp(event(e-1).cond, 'unrelated')
+                event(e).cond = 'unrelated';
+            end
     end
     
     
     % Decide on event type
-    if any(event(e).type == [111 112 121 122 211 212 221 222])
-        event(e).type = 'stimulus';
+    if any(event(e).type == [111 112 121 122])
+        event(e).type = 'prime';
+    elseif any(event(e).type == [211 212 221 222])
+        event(e).type = 'target';
     elseif any(event(e).type == [201 202])
         event(e).type = 'response';
     end
