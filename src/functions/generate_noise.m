@@ -1,6 +1,7 @@
-
+function [Noise, s, maxE] = generate_noise(srate, eTime)
 % Function to generate noise based on real datasets; from ERP-Core P3
 % datasets.
+
 
 % First get path to P3 raw data; is in BIDS format
 core_path = dir(fullfile('/store/data','erp-core','sub-*'));
@@ -8,17 +9,17 @@ core_path = dir(fullfile('/store/data','erp-core','sub-*'));
 % Subjects
 sub = 1:size(core_path, 1);
 
-% Init noise matrix
-% noise = zeros(1,1,length(sub));
-
 % Run through subjects; preprocess
 for i = sub
     % Load data
-    filename_csv= ['/store/projects/skukies/unfold_duration/local/P3_clean/csv/' num2str(sub) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set.csv'];
+    filename_csv= ['/store/projects/skukies/unfold_duration/local/P3_clean/csv/' num2str(i) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set.csv'];
     
-    EEG = pop_loadset([core_path(i).folder '/' core_path(i).name 'ses-P3/eeg/' core_path(i).name '_ses-P3_task-P3_eeg.set']);
-    csv = readtable(filename_csv);
-    
+    EEG = pop_loadset([core_path(i).folder '/' core_path(i).name '/ses-P3/eeg/' core_path(i).name '_ses-P3_task-P3_eeg.set']);
+    try
+        csv = readtable(filename_csv);
+    catch
+        continue
+    end
     % Delete EOG channels
     EEG = pop_select( EEG, 'nochannel',{'HEOG_left','HEOG_right','VEOG_lower'});
     
@@ -54,15 +55,46 @@ for i = sub
     
     % Make Eventlist for ERPLAB artefact reject
     EEG  = pop_creabasiceventlist( EEG , 'AlphanumericCleaning', 'on', 'BoundaryNumeric', { -99 }, 'BoundaryString', { 'boundary' } );
-    
+%     EEG = basicrap(EEG, [1:30], 100);
+%     EEG = basicrap(EEG, chanArray, ampth, windowms, stepms, firstdet, fcutoff, forder)
     % Epoch
-    EEG = pop_epoch( EEG, {  }, [-0.2           1], 'epochinfo', 'yes');
+    EEG = pop_epoch( EEG, {  }, eTime, 'epochinfo', 'yes');
     
     % Baseline
     EEG = pop_rmbase( EEG, [-200 0] ,[]);
     
     % Artefact detection, erplab peak-to-peak moving window
-    EEG  = pop_artmwppth( EEG , 'Channel',  1:33, 'Flag',  1, 'Threshold',  100, 'Twindow', [ -200 996], 'Windowsize',  200, 'Windowstep',  100 );
+    EEG  = pop_artmwppth( EEG , 'Channel',  1:30, 'Flag',  1, 'Threshold',  250, 'Twindow', [ -200 996], 'Windowsize',  200, 'Windowstep',  100 );
+ 
+    % Reject artefacts
+    ix_reject = find(EEG.reject.rejmanual);
+    EEGN = EEG;
+    EEGN.data(:,:,ix_reject) = [];
+    EEGN.event(ix_reject) = [];
     
+    % Make Grand averages
+    tmp_type = extractfield(EEGN.event, 'eventtype');
+    tmp_trial = extractfield(EEGN.event, 'trialtype');
+    idx_avg_target = find(tmp_type == "stimulus" & tmp_trial == "target");
+    idx_avg_distractor = find(tmp_type == "stimulus" & tmp_trial == "distractor");
+    idx_avg_resp_target = find(tmp_type == "button" & tmp_trial == "target");
+    idx_avg_resp_distractor = find(tmp_type == "button" & tmp_trial == "distractor");
     
+    tmp_epoch = extractfield(EEGN.event, 'epoch');
+    noise_target = EEG.data(:,:,tmp_epoch(idx_avg_target)) - mean(EEG.data(:,:,tmp_epoch(idx_avg_target)),3);
+    noise_distractor = EEG.data(:,:,tmp_epoch(idx_avg_distractor)) - mean(EEG.data(:,:,tmp_epoch(idx_avg_distractor)),3);
+    noise_resp_target = EEG.data(:,:,tmp_epoch(idx_avg_resp_target)) - mean(EEG.data(:,:,tmp_epoch(idx_avg_resp_target)),3);
+    noise_resp_distractor = EEG.data(:,:,tmp_epoch(idx_avg_resp_distractor)) - mean(EEG.data(:,:,tmp_epoch(idx_avg_resp_distractor)),3);
+    
+    tmp_Noise = cat(3, noise_target, noise_distractor, noise_resp_target, noise_resp_distractor);
+    
+    Noise(i) = {tmp_Noise}; 
 end
+
+% Delete empty cells because of no csv file 
+idx_empty = find(cellfun('isempty',Noise));
+Noise(idx_empty) = [];
+
+% Get maximum number of epochs
+s = cellfun('size',Noise,3);
+maxE = max(s);

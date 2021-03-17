@@ -1,5 +1,5 @@
 %%
-tmp_fn_p3 = dir(fullfile('local','p3','*.mat'));
+tmp_fn_p3 = dir(fullfile('store/projects/unfold_duration/local','p3','*.mat'));
 tmp_fn_p3 = {tmp_fn_p3.name};
 fn_p3 = cellfun(@(x)strsplit(x,'_'),tmp_fn_p3,'UniformOutput',false);
 fn_p3 = cell2table(cat(1,fn_p3{:}),'VariableNames',{'sub','formula'});
@@ -12,7 +12,7 @@ fn_p3.folder = repmat({'p3'},1,height(fn_p3))';
 %
 all_b = nan(height(fn_p3),31,512,10);
 all_bnodc = nan(height(fn_p3),31,512,10);
-for r = 1:height(fn_p3)
+for r = [1:75 79:height(fn_p3)] % Jump over sets with only 3 betas, only subject 37
     fprintf("Loading :%i/%i\n",r,height(fn_p3))
     
     tmp = load(fullfile('local',fn_p3.folder{r},fn_p3.filename{r}));
@@ -50,7 +50,7 @@ GA_median = splitapply(@(x)median(x),fn_p3.beta,groupIx);
 fn_p3_ga_outlier= table(unique(fn_p3.formula),GA,GA_mean,GA_median,'VariableNames',{'formula','beta_trimmean','beta_mean','beta_median'});
 %%
 figure,plot(linspace(-1,1,512),squeeze(fn_p3_ga_outlier.beta_trimmean(1,21,:,1)));
-hold all,
+hold all, 
 plot(linspace(-1,1,512),squeeze(fn_p3_ga_outlier.beta_mean(1,21,:,1)))
 plot(linspace(-1,1,512),squeeze(fn_p3_ga_outlier.beta_median(1,21,:,1)))
 legend('20% trimmed mean','mean','median')
@@ -69,7 +69,7 @@ group = grouplist(group);
 
 for modelRT = [3 2]
 for beta = {'beta_nodc','beta'}
-    d = permute(fn_p3_ga{modelRT,beta{1}},[2 3 4 1]);
+    d = permute(fn_p3_ga{modelRT,beta{1}},[2 3 4 1]); % Just to take care of singleton dimension
     
     % d_sub = squeeze(fn_p3.beta(groupIx == 3,21,:,1:2));
     
@@ -112,7 +112,7 @@ t = [];
 for k = 1:height(tablesplines)
     tmp = load(fullfile('local','p3',tablesplines.filename{k}));
     paramval = tmp.ufresult_a.unfold.splines{1}.paramValues;
-    type = tmp.ufresult_a.unfold.X(:,2);
+    type = tmp.ufresult_a.unfold.X(:,2);    
     type(isnan(paramval(1:length(type)))) = [];
     paramval(isnan(paramval)) = [];
     
@@ -240,7 +240,7 @@ for k = 1:3;%[2 1 3]
             error
     end
     figure
-    g = gramm('x',times(:),'y',data(:),'color',group(:),'group',sub(:));
+    g = gramm('x',times(:),'y',data(:),'color',group(:));
     
     g.geom_line()
     g.facet_wrap(sub,'scale','free_y','column_labels',false)
