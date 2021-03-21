@@ -11,8 +11,10 @@ badSubject = [];
 
 for sub = 1:40
     %%
-    filename = ['C:/Users/behinger/Downloads/P3_clean/' num2str(sub) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set'];
-    filename_csv= ['C:/Users/behinger/Downloads/P3_clean/' num2str(sub) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set.csv'];
+%     filename = ['C:/Users/behinger/Downloads/P3_clean/' num2str(sub) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set'];
+%     filename_csv= ['C:/Users/behinger/Downloads/P3_clean/' num2str(sub) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set.csv'];
+    filename = ['/store/projects/unfold_duration/local/P3_clean/' num2str(sub) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set'];
+    filename_csv= ['/store/projects/unfold_duration/local/P3_clean/csv/' num2str(sub) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set.csv'];
     try
         csv = readtable(filename_csv);
     catch e
@@ -52,7 +54,7 @@ for sub = 1:40
             ...%'y~1+cat(trialtype)+spl(rtDis,4) + spl(rtTar,4)'
             }'
         %for k = 1:2
-        EEG = uf_designmat(EEG,'eventtypes',{'stimulus','button'},'formula',...
+        EEG = uf_designmat(EEG,'eventtypes',{'button','stimulus'},'formula',...
             {formula{1},'y~1+cat(trialtype)'});
        
         EEG = uf_timeexpandDesignmat(EEG,'timelimits',[-1 1]);
@@ -71,10 +73,10 @@ for sub = 1:40
 %         EEGe = uf_glmfit_nodc(EEGe,'method','glmnet','glmnetalpha',0,'channel',21);
         
         filename = sprintf('sub-%i_formula-%s.mat',sub,formula{1});
-        if ~exist(fullfile('local','p3'),'dir')
-            mkdir(fullfile('local','p3'))
+        if ~exist(fullfile('store/projects/unfold_duration/local','p3_button'),'dir')
+            mkdir(fullfile('store/projects/unfold_duration/local','p3_button'))
         end
-        save(fullfile('local','p3',filename),'ufresult_a')
+        save(fullfile('store/projects/unfold_duration/local','p3_button',filename),'ufresult_a')
         
     end
     

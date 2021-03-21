@@ -1,4 +1,4 @@
-function EEG = generate_eeg(EEG,shape,overlap,overlapdistribution,noise,overlapModifier,N_event,T_event,durEffect,harmonize)
+function EEG = generate_eeg(EEG,shape,overlap,overlapdistribution,noise,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise)
 
 options = struct();
 options.overlap = overlap; % 0 deactivates overlap
@@ -7,6 +7,7 @@ options.noise = noise;
 options.overlapdistribution = overlapdistribution;
 options.overlapModifier= overlapModifier;
 options.durEffect = durEffect;
+options.realNoise = tmpNoise;
 
 %-------------------------------
 % generate event-timings
@@ -46,8 +47,22 @@ for e = 1:length(event_lat(1:end-1))
         % duration does not effect shape
         sigduration = mean(diff([EEG.event.latency]));
     end
+    
+    if ~options.realNoise{1}
+        tmprNoise = 0;
+    else
+        % Get noise for only one channel & one epoch, as long as the signal
+        nullPunkt = (0.2*EEG.srate);
+        noiseLength = nullPunkt:(nullPunkt+sigduration);
+        chan = randperm(size(tmpNoise{1},1),1);
+        epoch = randperm(size(tmpNoise{1},3),1);
+        tmprNoise = options.realNoise{1}(chan, noiseLength, epoch);
+        
+        % Also set normal noise option to zero so it is not added later
+        options.noise = 0;
+    end
     % starting sample
-    sig = generate_signal_kernel(sigduration,options.shape,EEG.srate,harmonize);
+    sig = generate_signal_kernel(sigduration, options.shape, EEG.srate, harmonize, tmprNoise);
     start = find(sig~=0,1);
     EEG.event(e).dur = dur./EEG.srate;
     EEG.event(e).sigdur = (find(sig(start:end)==0,1)+start)./EEG.srate;

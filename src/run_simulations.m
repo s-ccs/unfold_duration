@@ -8,18 +8,42 @@ emptyEEG.srate = 100; %Hz
 emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 harmonize = 1; % Harmonize shape of Kernel? 1 = Yes; 0 = No
-saveFolder = "sim_harm"; % Folder to save in
+saveFolder = "sim_realNoise"; % Folder to save in
+
+% Get Noise from p3 dataset
+% if saveFolder == "sim_realNoise"
+%     [Noise, n_epochs, maxEpochs] = generate_noise(emptyEEG.srate, [-0.2 1.5]);
+%     Noise15 = generate_noise(emptyEEG.srate, [-0.2 1.5*1.5]);
+%     Noise2 = generate_noise(emptyEEG.srate, [-0.2 1.5*2]);
+%     
+% end
+
+% Start Parpool 
+% parpool('local', 10)
 
 for iter = 1:50
-for durEffect = [0 1]
+for durEffect = 1 %[0 1]
 for shape = {'box','posNeg','posNegPos','hanning'}
     for overlap = [0 1]
         for overlapdistribution ={'uniform','halfnormal'}
             for noise = [0 1]
                 for overlapModifier = [1 1.5 2]
                     rng(iter) % same seed
+                    %% Generate Noise
+                    if saveFolder == "sim_realNoise" && noise == 1
+                        switch overlapModifier
+                            case 1
+                                tmpNoise = Noise(randperm(length(Noise),1));
+                            case 1.5
+                                tmpNoise = Noise15(randperm(length(Noise),1));
+                            case 2
+                                tmpNoise = Noise2(randperm(length(Noise),1));
+                        end
+                    else
+                        tmpNoise = {0};
+                    end
                     %% Simulate data with the given properties
-                    EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event,durEffect,harmonize);
+                    EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise);
                     center= quantile([EEG.event.dur],linspace( 1/(10+1), 1-1/(10+1), 10));
                     binEdges = conv([-inf center inf], [0.5, 0.5], 'valid');
                     [~,~,indx] = histcounts([EEG.event.dur],binEdges);
@@ -44,7 +68,7 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                             tmin = sum(ufresult_marginal.times<=0);
                             sig = nan(size(ufresult_marginal.beta));
                             for d = 1:length(durations)
-                                tmp= generate_signal_kernel(durations(d)*EEG.srate*overlapModifier,shape{1},EEG.srate,harmonize);
+                                tmp= generate_signal_kernel(durations(d)*EEG.srate*overlapModifier,shape{1},EEG.srate,harmonize, 0);
                                 sig(1,tmin+1:min(tmin+length(tmp),end),d+1) = tmp(1:min(end,size(sig,2)-tmin));
                             end
                             
@@ -57,10 +81,11 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                         
                         %% save it
                         filename = sprintf('%s_overlap-%i_%s_noise-%.2f_%s_durEffect-%i_iter-%i_overlapmod-%.1f.mat',shape{1},overlap,overlapdistribution{1},noise,formula{1},durEffect,iter,overlapModifier);
-                        if ~exist(fullfile('local',saveFolder),'dir')
-                            mkdir(fullfile('local',saveFolder))
+                        if ~exist(fullfile('store/projects/unfold_duration/local',saveFolder),'dir')
+                            mkdir(fullfile('store/projects/unfold_duration/local',saveFolder))
                         end
-                        save(fullfile('local',saveFolder,filename),'ufresult_marginal');
+%                         parsave(fullfile('local',saveFolder,filename), ufresult_marginal)
+                        save(fullfile('store/projects/unfold_duration/local',saveFolder,filename),'ufresult_marginal');
                     end
                     
                 end

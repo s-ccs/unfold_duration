@@ -1,8 +1,9 @@
-function sig = generate_signal_kernel(dur,shape,srate, harmonize)
+function sig = generate_signal_kernel(dur,shape,srate, harmonize, Noise)
 start = 0.05*srate; 
 stop = dur;
 assert(stop>3*start,'signal duration is too short')
 
+%% Should shapes be harmonized?
 if ~harmonize
     eventsamples =round(start:stop);
 else
@@ -11,11 +12,34 @@ end
 
 sig = zeros(round(2*length(eventsamples)),1);
 
+%% Is real noise used?
+if ~Noise
+    Noise = zeros(1,length(sig));
+    multiplier = 1;
+else
+    if length(Noise) ~= sig
+        warning('Noise and Signal duration do not match, will be extended')
+    end
+    % Make Noise as long as the Signal
+    diffL = length(sig) - length(Noise);
+    if length(Noise) >= diffL
+        Noise = [Noise Noise(1:diffL)];
+    else
+        tmpDiff = diffL - length(Noise);
+        Noise = [Noise Noise Noise(1:tmpDiff)];
+    end
+    multiplier = 10;
+end
+%% Make kernel
 switch shape
     case "hanning"
         sig(eventsamples) = hanning(length(eventsamples));
+        sig = sig .* multiplier;
+        sig(1:end) = sig(1:end) + Noise';
     case "box"
         sig(eventsamples) = 1;
+        sig = sig .* multiplier;
+        sig(1:end) = sig(1:end) + Noise';
     case "posNeg"
         % 50ms posPeak, duration negPeak
         posSig = zeros(length(eventsamples),1);
@@ -24,6 +48,8 @@ switch shape
         posSig(1:posSize) = hanning(posSize);
         negSig((posSize+1):end) = -hanning(length(eventsamples)-posSize);
         sig(eventsamples) = posSig + negSig;
+        sig = sig .* multiplier;
+        sig(1:end) = sig(1:end) + Noise';
     case "posNegPos"
         % 50ms posPeak, 50ms negPeak, 50ms Rising edge + duration
         % for the falling edge
@@ -46,5 +72,7 @@ switch shape
         tmp = hanning(2*(length(eventsamples)-3*constantPeakSize));
         pos2Sig(start+3*constantPeakSize+1:start+(3*constantPeakSize+length(tmp)/2)) = tmp(end/2+1:end);
         sig = posSig + negSig + pos2Sig;
+        sig = sig .* multiplier;
+        sig(1:end) = sig(1:end) + Noise';
      
 end

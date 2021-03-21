@@ -9,48 +9,52 @@ ufresult_all = [];
 ufresult_all_a = [];
 badS = [];
 
-for sub = [6 9]%:40
+for sub = 1:40
     %%
-    if sub < 10
-        s = ['0' num2str(sub)];
-    else
-        s = num2str(sub);
-    end
+    s = sprintf('%03i',sub);
     
     % Load data
-    filename = ['/store/data/erp-core/derivatives/autopreprocess/sub-0' s '/ses-N400/eeg/sub-0' s '_ses-N400_task-N400_eeg.mat'];
+    filename = ['/store/data/erp-core/derivatives/autopreprocess/sub-' s '/ses-N400/eeg/sub-' s '_ses-N400_task-N400_eeg.mat'];
+%     filename = ['/store/projects/erp-core/export/sub-' s '/ses-N400/eeg/sub-' s '_ses-N400_task-N400_eeg.set'];
+
     try
         mydata = load('-mat', filename);
+        % EEG = pop_loadset(filename)
     catch
         badS = [badS sub];
         continue
     end
     EEG = mydata.EEG;
     EEG.data = double(EEG.data);
+    try % Try cause sub 6 & 9 are weird
     EEG = pop_resample(EEG, 512);
-    
+    catch
+        warning(['Subject ' s ' not resampled'])
+        continue
+    end
     % Check for rejection
     winrej = uf_continuousArtifactDetectASR(EEG);
     
     % rename to be used in EEG
     EEG = recode_N400(EEG);
-%     badIx = cellfun(@(x)isnan(x),{EEG.event.rt});
-%     EEG.event(badIx) = [];
-    %EEG = pop_reref(EEG);
+%     EEG = recode_N400_1(EEG);
+
+    EEG = pop_reref(EEG, []);
+    
     %%
-    for formula = {'y~1+cat(eventtype)'
-            'y~1+cat(eventtype)+rt'
-            'y~1+cat(eventtype)+spl(rt,4)'
+    for formula = {'y~1+cat(cond)'
+            'y~1+cat(cond)+rt'
+            'y~1+cat(cond)+spl(rt,4)'
             ...%'y~1+cat(trialtype)+spl(rtDis,4) + spl(rtTar,4)'
             }'
         %for k = 1:2
-        EEG = uf_designmat(EEG,'eventtypes',{'stimulus', 'response'},'formula',...
-            {formula{1}, 'y~1'});
+        EEG = uf_designmat(EEG,'eventtypes',{'prime', 'target', 'response'},'formula',...
+            {'y~1+cat(cond)', formula{1}, 'y~1+cat(cond)'});
        
         EEG = uf_timeexpandDesignmat(EEG,'timelimits',[-1 1]);
         EEG = uf_continuousArtifactExclude(EEG,'winrej',winrej);
         
-        EEG = uf_glmfit(EEG,'channel',21);
+        EEG = uf_glmfit(EEG,'channel',[15 21]); % Changed on 19/01/2021 to use two channels (FPz & CPz)
         
         EEGe = uf_epoch(EEG,'timelimits',[-1 1]);
         predictAt = {{'rt',[200 250 300 350 400 450]}};

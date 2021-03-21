@@ -54,7 +54,7 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                             ufresult_marginal.beta      = sig;
                             ufresult_marginal.beta_nodc = sig;
                         else
-                            ufresult_marginal = fit_unfold(EEG,formula{1},T_event);
+                            ufresult_marginal = fit_unfold(EEG,formula{1},T_event,1);
                         end
                         
                         %% save it
