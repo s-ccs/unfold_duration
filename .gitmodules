@@ -4,3 +4,6 @@
 [submodule "lib/eeglab"]
 	path = lib/eeglab
 	url = https://github.com/sccn/eeglab
+[submodule "lib/ept_TFCE-matlab"]
+	path = lib/ept_TFCE-matlab
+	url = https://github.com/Mensen/ept_TFCE-matlab.git
