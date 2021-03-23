@@ -1,7 +1,7 @@
 %  Script to analyse P3 results using TFCE
 
 % First we need to load the data and make it usable for ept_TFCE
-% Data needs to be in format Ch X Time/Value X Subject
+% Data needs to be in format Sub X Chan X Times
 %%
 tmp_fn_p3 = dir(fullfile('/store/projects/unfold_duration/local','p3','*.mat'));
 tmp_fn_p3 = {tmp_fn_p3.name};
@@ -16,7 +16,7 @@ fn_p3.folder = repmat({'p3'},1,height(fn_p3))';
 %% Load data
 all_b = nan(height(fn_p3),31,512,10);
 all_bnodc = nan(height(fn_p3),31,512,10);
-for r = [1:75 79:height(fn_p3)] % Jump over sets with only 3 betas, only subject 37
+for r = 1:height(fn_p3) %[1:75 79:height(fn_p3)] % Jump over sets with only 3 betas, only subject 37
     fprintf("Loading :%i/%i\n",r,height(fn_p3))
     
     tmp = load(fullfile('/store/projects/unfold_duration/local',fn_p3.folder{r},fn_p3.filename{r}));
@@ -83,6 +83,8 @@ for modelRT = [3 2]
     end
     if modelRT == 3
         % reaction Time not modelled
+        dataTarget(any(any(isnan(dataTarget),3),2),:,:) = [];
+        dataDistractor(any(any(isnan(dataDistractor),3),2),:,:) = [];
         dataNoRT{1} = dataTarget; % No overlap correction
         dataNoRT{2} = dataDistractor; % No overlap correction
         dataNoRT{3} = dataTarget_beta; % With overlap correction
@@ -114,7 +116,11 @@ eLoc = tmp.ufresult_a.chanlocs;
 chanNeighbours = ept_ChN2(eLoc);
 
 %%
-Results = ept_TFCE(dataNoRT{1}, dataNoRT{2}, eLoc(21), 'rsample', 512, 'chn', chanNeighbours(21,:), 'nperm', 500);
+cfg = struct('nperm', 1500, 'neighbours', chanNeighbours(21,:));
+NoDC_NoRT = dataNoRT{1} - dataNoRT{2};
+
+% Results = ept_TFCE(dataNoRT{1}, dataNoRT{2}, eLoc(21), 'rsample', 512, 'chn', chanNeighbours(21,:), 'nperm', 5000, 'flag_save', 0);
+[res, info] = be_ept_tfce_diff(cfg, NoDC_NoRT);
 
 
 
