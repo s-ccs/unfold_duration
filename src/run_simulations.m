@@ -1,5 +1,6 @@
 % Run a bunch of simulations (~20GB space if all combinations are used)
 
+%% Initialize a bunch of Options
 rng(1) % same seed
 ufresult_all = {};
 N_event = 500; % max number of events
@@ -8,19 +9,20 @@ emptyEEG.srate = 100; %Hz
 emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 harmonize = 1; % Harmonize shape of Kernel? 1 = Yes; 0 = No
-saveFolder = "sim_realNoise"; % Folder to save in
+saveFolder = "sim_regularize"; % Folder to save in
+regularize = 1;
 
-% Get Noise from p3 dataset
-% if saveFolder == "sim_realNoise"
-%     [Noise, n_epochs, maxEpochs] = generate_noise(emptyEEG.srate, [-0.2 1.5]);
-%     Noise15 = generate_noise(emptyEEG.srate, [-0.2 1.5*1.5]);
-%     Noise2 = generate_noise(emptyEEG.srate, [-0.2 1.5*2]);
-%     
-% end
+%% If real noise to be used get Noise from p3 dataset
+if saveFolder == "sim_realNoise"
+    [Noise, n_epochs, maxEpochs] = generate_noise(emptyEEG.srate, [-0.2 1.5]);
+    Noise15 = generate_noise(emptyEEG.srate, [-0.2 1.5*1.5]);
+    Noise2 = generate_noise(emptyEEG.srate, [-0.2 1.5*2]);
+    
+end
 
 % Start Parpool 
 % parpool('local', 10)
-
+%%
 for iter = 1:50
 for durEffect = 1 %[0 1]
 for shape = {'box','posNeg','posNegPos','hanning'}
@@ -72,20 +74,26 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                                 sig(1,tmin+1:min(tmin+length(tmp),end),d+1) = tmp(1:min(end,size(sig,2)-tmin));
                             end
                             
+                            % Signal is bigger when real Noise is used, so
+                            % the theoretical one has to be multiplied as
+                            % well
+                            if saveFolder == "sim_realNoise" && noise == 1
+                                sig = sig .* 10;
+                            end
                             
                             ufresult_marginal.beta      = sig;
                             ufresult_marginal.beta_nodc = sig;
                         else
-                            ufresult_marginal = fit_unfold(EEG,formula{1},T_event, 0);
+                            ufresult_marginal = fit_unfold(EEG,formula{1},T_event, 0, regularize);
                         end
                         
                         %% save it
                         filename = sprintf('%s_overlap-%i_%s_noise-%.2f_%s_durEffect-%i_iter-%i_overlapmod-%.1f.mat',shape{1},overlap,overlapdistribution{1},noise,formula{1},durEffect,iter,overlapModifier);
-                        if ~exist(fullfile('store/projects/unfold_duration/local',saveFolder),'dir')
-                            mkdir(fullfile('store/projects/unfold_duration/local',saveFolder))
+                        if ~exist(fullfile('/store/projects/unfold_duration/local',saveFolder),'dir')
+                            mkdir(fullfile('/store/projects/unfold_duration/local',saveFolder))
                         end
 %                         parsave(fullfile('local',saveFolder,filename), ufresult_marginal)
-                        save(fullfile('store/projects/unfold_duration/local',saveFolder,filename),'ufresult_marginal');
+                        save(fullfile('/store/projects/unfold_duration/local',saveFolder,filename),'ufresult_marginal');
                     end
                     
                 end
