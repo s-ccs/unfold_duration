@@ -9,43 +9,38 @@ emptyEEG.srate = 100; %Hz
 emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 harmonize = 1; % Harmonize shape of Kernel? 1 = Yes; 0 = No
-saveFolder = "sim_regularize"; % Folder to save in
+saveFolder = "sim_realNoise_regularize"; % Folder to save in
 regularize = 1;
 
+%% Noise options using SEREEGA function
+N = struct();
+N.mode = "amplitude"; % Can be either amplitude or snr
+N.value = 2; % Either amplitude value or snr range; see utl_add_sensornoise
+
 %% If real noise to be used get Noise from p3 dataset
-if saveFolder == "sim_realNoise"
-    [Noise, n_epochs, maxEpochs] = generate_noise(emptyEEG.srate, [-0.2 1.5]);
-    Noise15 = generate_noise(emptyEEG.srate, [-0.2 1.5*1.5]);
-    Noise2 = generate_noise(emptyEEG.srate, [-0.2 1.5*2]);
-    
+if (saveFolder == "sim_realNoise" && ~exist('Noise')) || (saveFolder == "sim_realNoise_regularize" && ~exist('Noise'))
+    Noise = resting_state_noise(emptyEEG.srate); 
 end
 
 % Start Parpool 
 % parpool('local', 10)
 %%
 for iter = 1:50
-for durEffect = 1 %[0 1]
+for durEffect = [0 1]
 for shape = {'box','posNeg','posNegPos','hanning'}
     for overlap = [0 1]
         for overlapdistribution ={'uniform','halfnormal'}
-            for noise = [0 1]
+            for noise = 1 %[0 1]
                 for overlapModifier = [1 1.5 2]
                     rng(iter) % same seed
                     %% Generate Noise
-                    if saveFolder == "sim_realNoise" && noise == 1
-                        switch overlapModifier
-                            case 1
-                                tmpNoise = Noise(randperm(length(Noise),1));
-                            case 1.5
-                                tmpNoise = Noise15(randperm(length(Noise),1));
-                            case 2
-                                tmpNoise = Noise2(randperm(length(Noise),1));
-                        end
+                    if (saveFolder == "sim_realNoise" && noise == 1) || (saveFolder == "sim_realNoise_regularize" && noise == 1)
+                        tmpNoise = Noise(randperm(length(Noise),1));
                     else
                         tmpNoise = {0};
                     end
                     %% Simulate data with the given properties
-                    EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise);
+                    EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise,N);
                     center= quantile([EEG.event.dur],linspace( 1/(10+1), 1-1/(10+1), 10));
                     binEdges = conv([-inf center inf], [0.5, 0.5], 'valid');
                     [~,~,indx] = histcounts([EEG.event.dur],binEdges);
@@ -77,7 +72,7 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                             % Signal is bigger when real Noise is used, so
                             % the theoretical one has to be multiplied as
                             % well
-                            if saveFolder == "sim_realNoise" && noise == 1
+                            if (saveFolder == "sim_realNoise" && noise == 1) || (saveFolder == "sim_realNoise_regularize" && noise == 1)
                                 sig = sig .* 10;
                             end
                             

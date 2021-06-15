@@ -1,4 +1,4 @@
-function EEG = generate_eeg(EEG,shape,overlap,overlapdistribution,noise,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise)
+function EEG = generate_eeg(EEG,shape,overlap,overlapdistribution,noise,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise, N)
 
 options = struct();
 options.overlap = overlap; % 0 deactivates overlap
@@ -48,21 +48,16 @@ for e = 1:length(event_lat(1:end-1))
         sigduration = mean(diff([EEG.event.latency]));
     end
     
+    % Check if real noise is used, if yes multiply 
     if ~options.realNoise{1}
-        tmprNoise = 0;
+        rNoise = 0;
     else
-        % Get noise for only one channel & one epoch, as long as the signal
-        nullPunkt = (0.2*EEG.srate);
-        noiseLength = nullPunkt:(nullPunkt+sigduration);
-        chan = randperm(size(tmpNoise{1},1),1);
-        epoch = randperm(size(tmpNoise{1},3),1);
-        tmprNoise = options.realNoise{1}(chan, noiseLength, epoch);
-        
-        % Also set normal noise option to zero so it is not added later
         options.noise = 0;
+        rNoise = 1;
     end
+    
     % starting sample
-    sig = generate_signal_kernel(sigduration, options.shape, EEG.srate, harmonize, tmprNoise);
+    sig = generate_signal_kernel(sigduration, options.shape, EEG.srate, harmonize, rNoise);
     start = find(sig~=0,1);
     EEG.event(e).dur = dur./EEG.srate;
     EEG.event(e).sigdur = (find(sig(start:end)==0,1)+start)./EEG.srate;
@@ -81,7 +76,22 @@ end
 EEG.event(end) = [];
 
 EEG.data(1,:) = sig1_tmp;%(1:EEG.pnts);
-EEG.data(1,:) = EEG.data(1,:) + options.noise * randn(size(EEG.data));
+%EEG.data(1,:) = EEG.data(1,:) + options.noise * randn(size(EEG.data));
+% Add noise
+if options.noise
+    EEG.data = utl_add_sensornoise(EEG.data, N.mode, N.value);
+elseif options.realNoise{1}
+    x = tmpNoise{1}(randperm(size(tmpNoise,1),1),:);
+    if length(EEG.data) <= length(x)
+    EEG.data = EEG.data(1,:) + x(1:length(EEG.data));
+    else
+        
+        lx = ceil(length(EEG.data)/length(x));
+        x = repmat(x,1,lx); % Prolong noise to be used on EEG data
+       EEG.data = EEG.data(1,:) + x(1:length(EEG.data));
+    end
+    
+end
 EEG.pnts = size(EEG.data,2);
 EEG.sim.sigAll = sigAll;
 EEG = eeg_checkset(EEG);

@@ -7,3 +7,6 @@
 [submodule "lib/ept_TFCE-matlab"]
 	path = lib/ept_TFCE-matlab
 	url = https://github.com/Mensen/ept_TFCE-matlab.git
+[submodule "SEREEGA"]
+	path = SEREEGA
+	url = https://github.com/lrkrol/SEREEGA.git

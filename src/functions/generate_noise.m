@@ -12,7 +12,7 @@ sub = 1:size(core_path, 1);
 % Run through subjects; preprocess
 for i = sub
     % Load data
-    filename_csv= ['/store/projects/skukies/unfold_duration/local/P3_clean/csv/' num2str(i) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set.csv'];
+    filename_csv= ['/store/projects/unfold_duration/local/P3_clean/csv/' num2str(i) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set.csv'];
     
     EEG = pop_loadset([core_path(i).folder '/' core_path(i).name '/ses-P3/eeg/' core_path(i).name '_ses-P3_task-P3_eeg.set']);
     try
@@ -64,7 +64,7 @@ for i = sub
     EEG = pop_rmbase( EEG, [-200 0] ,[]);
     
     % Artefact detection, erplab peak-to-peak moving window
-    EEG  = pop_artmwppth( EEG , 'Channel',  1:30, 'Flag',  1, 'Threshold',  250, 'Twindow', [ -200 996], 'Windowsize',  200, 'Windowstep',  100 );
+    EEG  = pop_artmwppth( EEG , 'Channel',  1:30, 'Flag',  1, 'Threshold',  100, 'Twindow', [ -200 996], 'Windowsize',  200, 'Windowstep',  100 );
  
     % Reject artefacts
     ix_reject = find(EEG.reject.rejmanual);

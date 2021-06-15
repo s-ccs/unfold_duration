@@ -33,7 +33,11 @@ if ~regularize
 else
     EEG = uf_glmfit(EEG, 'method', 'glmnet', 'glmnetalpha', 0);
     EEG = uf_epoch(EEG,cfgTimeexpand);
-    EEG = uf_glmfit_nodc(EEG, 'method', 'glmnet', 'glmnetalpha', 0);
+    if formula == "y~1" 
+        EEG = uf_glmfit_nodc(EEG);
+    else
+        EEG = uf_glmfit_nodc(EEG, 'method', 'glmnet', 'glmnetalpha', 0);
+    end
     ufresult = uf_condense(EEG);
     ufresult_marginal = uf_addmarginal(uf_predictContinuous(ufresult));
 end
