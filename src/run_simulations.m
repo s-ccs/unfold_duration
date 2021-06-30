@@ -10,8 +10,15 @@ emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 harmonize = 1; % Harmonize shape of Kernel? 1 = Yes; 0 = No
 saveFolder = "sim_realNoise"; % Folder to save in
-regularize = 1;
 
+%% Check for regularization (based on folder name)
+if regexp(saveFolder', regexptranslate('wildcard', '**regularize'))
+    regularize = 1;
+    noiseIDX = 1;
+else
+    regularize = 0;
+    noiseIDX = [0 1];
+end
 %% Noise options using SEREEGA function
 N = struct();
 N.mode = "amplitude"; % Can be either amplitude or snr
@@ -30,7 +37,7 @@ for durEffect = [0 1]
 for shape = {'posHalf'}%{'box','posNeg','posNegPos','hanning'}
     for overlap = [0 1]
         for overlapdistribution ={'uniform','halfnormal'}
-            for noise = 1 %[0 1]
+            for noise = noiseIDX
                 for overlapModifier = [1 1.5 2]
                     rng(iter) % same seed
                     %% Generate Noise
