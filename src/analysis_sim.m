@@ -6,6 +6,8 @@ folder = 'sim_realNoise'; % Change to desired folder;
                    % sim_regularize = reularization
                    % sim_realNoise = real EEG noise used
                    % sim_newNoise = With SEREEGA noise
+                   % sim_realNoise_regularize = real noise with
+                   %                   regularization (only noise condition)
 
 tmp_fn = dir(fullfile('/store/projects/unfold_duration/local',folder, '*.mat'));
 tmp_fn = {tmp_fn.name};
@@ -56,7 +58,7 @@ clear all_b all_bnodc
 %tmp = load(fullfile('local',folder,fn.filename{1}));
 
 % ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-2.0.mat" & fn.shape == "box" & fn.noise=="noise-0.00"&fn.overlap=="overlap-1";
-ix  = fn.shape=="posNegPos" & fn.durEffect == "durEffect-1" & fn.iter=="iter-13" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1" & fn.formula ~= "y~1";
+ix  = fn.shape=="posHalf" & fn.durEffect == "durEffect-1" & fn.iter=="iter-42" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-0" ;%& fn.formula ~= "y~1";
 % ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"&fn.overlap=="overlap-0"& fn.formula ~= "y~1";
 % ix  = fn.shape=="posNegPos" & fn.durEffect == "durEffect-1" & fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1";
 % ix  = fn.shape=="posNegPos" & fn.durEffect == "durEffect-0" & fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"& fn.overlap=="overlap-1";
@@ -84,7 +86,9 @@ for r = 1:height(fn)
     y_est = row.beta(:,:,2:end-1); % For two event simulation
     y_est(isnan(y_est(:))) = 0; % can happen in case of theoretical
     dev = sum((y_true(:) - y_est(:)).^2);
+    dev2 = immse(y_true, y_est);
     fn{r,'MSE'} = dev;
+    fn{r,'MSE_matlab'} = dev;
 end
 for r = 1:height(fn)
     fprintf("Normalize :%i/%i\n",r,height(fn))
@@ -96,6 +100,7 @@ for r = 1:height(fn)
     assert(sum(ix_intercept) == 1)
     
     fn{r,'normMSE'} = fn{r,'MSE'}/fn{ix_intercept,'MSE'};
+    fn{r,'normMSE_matlab'} = fn{r,'MSE_matlab'}/fn{ix_intercept,'MSE_matlab'};
     
 end
 
@@ -111,7 +116,7 @@ g.facet_grid(fn_plot.noise,fn_plot.overlap,'scale','free_y')
 g.fig(fn_plot.overlapdist)
 g.axe_property('ylim',[-0.1 1.5])
 g.draw()
-%% Display MSE results
+%% Display MSE results (sectioin to change and plot specific results)
 figure
 fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1" & fn.overlap == "overlap-1" & fn.shape == "posNegPos",:);
 g = gramm('x',fn_plot.shape,'y',fn_plot.normMSE,'color',fn_plot.formula,'marker',fn_plot.shape);

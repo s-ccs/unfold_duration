@@ -24,6 +24,21 @@ switch shape
         sig(eventsamples) = hanning(length(eventsamples));
         sig = sig .* multiplier;
         
+    case "posHalf"
+        posSig = sig;
+        pos2Sig = posSig;
+        constantPeakSize= ceil(0.30*srate);%floor(length(eventsamples)/2);
+        
+        % Constant first half
+        tmp = hanning(constantPeakSize);
+        posSig(start+1:(start+constantPeakSize/2)) = tmp(1:end/2);
+        % Changing second half
+        tmp = hanning(2*(length(eventsamples)-constantPeakSize/2));
+        pos2Sig(start+constantPeakSize/2+1:start+(constantPeakSize/2+length(tmp)/2)) = tmp(end/2+1:end);
+
+        sig = posSig + pos2Sig;
+        sig = sig .* multiplier;
+        
     case "box"
         sig(eventsamples) = 1;
         sig = sig .* multiplier;
