@@ -21,9 +21,9 @@ fn.filename = tmp_fn';
 all_b = nan(height(fn),1,250,11); % size based on dataset used: sim/sim/_harm (1,250,11); sim2 (1,250,12)
 all_bnodc = nan(height(fn),1,250,11);
 for r = 1:height(fn)
-%     if ~(fn.overlap{r}=="overlap-1" && fn.durEffect{r} == "durEffect-0" && fn.shape{r} =="posNegPos")
-%         continue
-%     end
+    if fn.shape{r} =="box"%~(fn.overlap{r}=="overlap-1" && fn.durEffect{r} == "durEffect-0" && fn.shape{r} =="posNegPos")
+        continue
+    end
     fprintf("Loading :%i/%i\n",r,height(fn))
     tmp = load(fullfile('/store/projects/unfold_duration/local',folder,fn.filename{r}));
     b = tmp.ufresult_marginal.beta;
@@ -58,7 +58,7 @@ clear all_b all_bnodc
 %tmp = load(fullfile('local',folder,fn.filename{1}));
 
 % ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-2.0.mat" & fn.shape == "box" & fn.noise=="noise-0.00"&fn.overlap=="overlap-1";
-ix  = fn.shape=="posHalf" & fn.durEffect == "durEffect-1" & fn.iter=="iter-42" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-0" ;%& fn.formula ~= "y~1";
+ix  = fn.shape=="posHalf" & fn.durEffect == "durEffect-1" & fn.iter=="iter-42" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00" & fn.overlap=="overlap-1" & fn.formula ~= "y~1";
 % ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"&fn.overlap=="overlap-0"& fn.formula ~= "y~1";
 % ix  = fn.shape=="posNegPos" & fn.durEffect == "durEffect-1" & fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1";
 % ix  = fn.shape=="posNegPos" & fn.durEffect == "durEffect-0" & fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"& fn.overlap=="overlap-1";
@@ -116,7 +116,7 @@ g.facet_grid(fn_plot.noise,fn_plot.overlap,'scale','free_y')
 g.fig(fn_plot.overlapdist)
 g.axe_property('ylim',[-0.1 1.5])
 g.draw()
-%% Display MSE results (sectioin to change and plot specific results)
+%% Display MSE results (section to change and plot specific results)
 figure
 fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1" & fn.overlap == "overlap-1" & fn.shape == "posNegPos",:);
 g = gramm('x',fn_plot.shape,'y',fn_plot.normMSE,'color',fn_plot.formula,'marker',fn_plot.shape);
