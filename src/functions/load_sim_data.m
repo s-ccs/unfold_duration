@@ -1,0 +1,76 @@
+function fn = load_sim_data(fn, folder, jump_shape)
+% Loads data from the simulations during the unfold duration project.
+%
+% fn = table
+% folder = string containing simulation instance
+%
+% R.Skukies; 07/09/2021
+
+
+% Check if results for simulation already exist as tabel
+if isfile(['/store/projects/unfold_duration/local/simulationResults/simulationResults_' folder '.csv'])
+    disp('Loading data from CSV file. This might take a while...')
+    fn = readtable(['/store/projects/unfold_duration/local/simulationResults/simulationResults_' folder '.csv']);
+    disp('Data loaded from CSV file')
+    return
+
+% Otherwise load results from .mat files
+else
+    
+    if any(strcmp({'sim', 'sim_regularize', 'sim_realNoise', 'sim_realNoise_regularize'}, folder))
+        all_b = nan(height(fn),1,250,11); % size based on dataset used: sim/sim/_harm (1,250,11); sim2 (1,250,12)
+        all_bnodc = nan(height(fn),1,250,11);
+        num_flag = 1;
+    else
+        all_b = nan(height(fn),1,250,12);
+        all_bnodc = nan(height(fn),1,250,12);
+        num_flag = 0;
+    end
+    
+    
+    N_files = height(fn);
+    for r = 1:N_files
+        %Check if current shape should be ignored
+        if exist("jump_shape")
+            if fn.shape{r} == jump_shape %~(fn.overlap{r}=="overlap-1" && fn.durEffect{r} == "durEffect-0" && fn.shape{r} =="posNegPos")
+                continue
+            end
+        end
+        
+        fprintf("Loading :%i/%i\n",r,N_files)
+        
+        tmp = load(fullfile('/store/projects/unfold_duration/local',folder,fn.filename{r}));
+        b = tmp.ufresult_marginal.beta;
+        b_nodc = tmp.ufresult_marginal.beta_nodc;
+        
+        % Artificially lengthen y~1 results
+        if strcmp(fn{r,'formula'},'y~1')
+            %         continue
+            if num_flag
+                b = repmat(b(:,:,1),1,1,11); % Change according to line 16
+                b_nodc = repmat(b_nodc(:,:,1),1,1,11);
+            else
+                b = repmat(b(:,:,1),1,1,12); % Change according to line 16
+                b_nodc = repmat(b_nodc(:,:,1),1,1,12);
+            end
+        end
+        
+        if strcmp(fn{r,'formula'},'y~1+cat(durbin)')
+            b(:,:,2:end+1) = b(:,:,1:end);
+            b_nodc(:,:,2:end+1) = b_nodc(:,:,1:end);
+        end
+        
+        all_b(r,:,:,:) = b;
+        all_bnodc(r,:,:,:) =  b_nodc;
+        
+        clear tmp b b_nodc
+    end
+    
+    fn.beta = squeeze(all_b);
+    fn.beta_nodc = squeeze(all_bnodc);
+    fn.folder =repmat({folder},1,height(fn))';
+    
+    % Save to csv file
+    writetable(fn,['/store/projects/unfold_duration/local/simulationResults/simulationResults_' folder '.csv'])
+    return
+end
