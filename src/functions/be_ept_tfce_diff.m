@@ -71,6 +71,8 @@ end
 
 TFCE_Obs = ept_mex_TFCE2D(T_Obs, cfg.neighbours, cfg.E_H);
 
+% TFCE_Obs = ept_mex_TFCE2D(T_Obs, cfg.neighbours, cfg.E_H);
+
 %% Calculating the T value and TFCE enhancement of each different permutation
 
 display('Calculating Permutations...')
@@ -92,8 +94,9 @@ for i   = 1:cfg.nperm           % Look into parfor for parallel computing
     
     
     
-    
     TFCE_Perm = ept_mex_TFCE2D(T_Perm, cfg.neighbours, cfg.E_H);
+    
+    %TFCE_Perm = ept_mex_TFCE2D(T_Perm, cfg.neighbours, cfg.E_H);
     
     
     maxTFCE(i) = max(abs(TFCE_Perm(:)));       % stores the maximum absolute value
@@ -133,7 +136,7 @@ display('All done!')
 toc
 
 [min_P, idx] = min(Results.P_Values(:));
-[Ch, S]      = ind2sub(size(Results.P_Values),idx);
+[S, Ch]      = ind2sub(size(Results.P_Values),idx);
 max_Obs      = Results.Obs(idx);
 
 display(['Peak significance found at channel ', num2str(Ch), ' at sample ', num2str(S), ': max-t-val(', num2str(size(D,1)-1), ') = ', num2str(max_Obs), ', p = ', num2str(min_P)]);

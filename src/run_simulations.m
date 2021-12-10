@@ -9,7 +9,7 @@ emptyEEG.srate = 100; %Hz
 emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 harmonize = 1; % Harmonize shape of Kernel? 1 = Yes; 0 = No
-saveFolder = "sim_realNoise"; % Folder to save in
+saveFolder = "sim_realNoise_regularize_filtered"; % Folder to save in
 
 %% Check for regularization (based on folder name)
 if regexp(saveFolder', regexptranslate('wildcard', '**regularize'))
@@ -25,23 +25,24 @@ N.mode = "amplitude"; % Can be either amplitude or snr
 N.value = 2; % Either amplitude value or snr range; see utl_add_sensornoise
 
 %% If real noise to be used get Noise from p3 dataset
-if (saveFolder == "sim_realNoise" && ~exist('Noise')) || (saveFolder == "sim_realNoise_regularize" && ~exist('Noise'))
+if (saveFolder == "sim_realNoise" && ~exist('Noise')) || (saveFolder == "sim_realNoise_regularize" && ~exist('Noise')) || (saveFolder == "sim_realNoise_regularize_filtered" && ~exist('Noise'))
     Noise = resting_state_noise(emptyEEG.srate); 
+    genNoise = 1;
 end
 
 % Start Parpool 
 % parpool('local', 10)
 %%
-for iter = 1:50
+for iter = 1 %:50
 for durEffect = [0 1]
-for shape = {'posHalf'}%{'box','posNeg','posNegPos','hanning'}
+for shape = {'posNeg','posNegPos','hanning'} % possible {'box','posNeg','posNegPos','hanning', 'posHalf'}
     for overlap = [0 1]
         for overlapdistribution ={'uniform','halfnormal'}
             for noise = noiseIDX
                 for overlapModifier = [1 1.5 2]
                     rng(iter) % same seed
                     %% Generate Noise
-                    if (saveFolder == "sim_realNoise" && noise == 1) || (saveFolder == "sim_realNoise_regularize" && noise == 1)
+                    if (genNoise && noise == 1)
                         tmpNoise = Noise(randperm(length(Noise),1));
                     else
                         tmpNoise = {0};
@@ -55,6 +56,10 @@ for shape = {'posHalf'}%{'box','posNeg','posNegPos','hanning'}
                         EEG.event(e).durbin = binEdges(indx(e));
                     end
                     
+                    % filter Data to hopefully get rid of the offset
+                    if saveFolder == "sim_realNoise_regularize_filtered"
+                        EEG = pop_eegfiltnew(EEG,0.5,[]);
+                    end
                     
                     for formula = {'y~1'
                             'y~1+cat(durbin)'
@@ -79,7 +84,7 @@ for shape = {'posHalf'}%{'box','posNeg','posNegPos','hanning'}
                             % Signal is bigger when real Noise is used, so
                             % the theoretical one has to be multiplied as
                             % well
-                            if (saveFolder == "sim_realNoise" && noise == 1) || (saveFolder == "sim_realNoise_regularize" && noise == 1)
+                            if (genNoise && noise == 1) 
                                 sig = sig .* 10;
                             end
                             

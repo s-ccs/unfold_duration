@@ -16,8 +16,14 @@ fn_p3.folder = repmat({'p3'},1,height(fn_p3))';
 %% Load data
 all_b = nan(height(fn_p3),31,512,10);
 all_bnodc = nan(height(fn_p3),31,512,10);
-for r = 1:height(fn_p3) %[1:75 79:height(fn_p3)] % Jump over sets with only 3 betas, only subject 37
+del_idx =[];
+for r = [1:height(fn_p3)] %[1:75 79:height(fn_p3)] 
     fprintf("Loading :%i/%i\n",r,height(fn_p3))
+    
+    if fn_p3.sub{r} == "sub-37"
+        del_idx = [del_idx r];
+        continue
+    end
     
     tmp = load(fullfile('/store/projects/unfold_duration/local',fn_p3.folder{r},fn_p3.filename{r}));
     b = tmp.ufresult_a.beta(:,:,:);
@@ -35,6 +41,14 @@ for r = 1:height(fn_p3) %[1:75 79:height(fn_p3)] % Jump over sets with only 3 be
 
     %fn_p3{r,'ufresult'} = tmp.ufresult_marginal;
 end
+
+% This takes care of subject 37; Has only 30 channels and throws an error.
+% Will be investigated...
+fn_p3(del_idx,:) = [];
+all_b(del_idx,:,:,:) = [];
+all_bnodc(del_idx,:,:,:) = [];
+
+% Transfer betas to table
 fn_p3.beta = squeeze(all_b);
 fn_p3.beta_nodc = squeeze(all_bnodc);
 
@@ -45,84 +59,96 @@ groupIx = findgroups(fn_p3.formula);
 
 dataNoRT = {};
 dataRT = {};
-for modelRT = [3 2]
-    tmp_ix = find(groupIx == modelRT);
-    dataTarget = zeros(length(tmp_ix), 1, size(fn_p3{1,'beta'},3)); 
-    dataDistractor = zeros(length(tmp_ix), 1, size(fn_p3{1,'beta'},3)); 
-    dataTarget_beta = zeros(length(tmp_ix), 1, size(fn_p3{1,'beta'},3)); 
-    dataDistractor_beta = zeros(length(tmp_ix), 1, size(fn_p3{1,'beta'},3)); 
-    for subject = 1:length(tmp_ix)
-    for beta = {'beta_nodc','beta'}
-        d = permute(fn_p3{tmp_ix(subject),beta{1}},[2 3 4 1]); % Just to take care of singleton dimension
-        
-        % d_sub = squeeze(fn_p3.beta(groupIx == 3,21,:,1:2));
-        switch beta{1}
-            case 'beta_nodc'
-                for k = 1:2
-                    if k == 1
-                        ix = 1;
-                        dataTarget(subject,:,:) = squeeze(d(21,:,ix));
-                    else
-                        ix = 8;
-                        dataDistractor(subject,:,:) = squeeze(d(21,:,ix));
-                    end
-                end
-            case 'beta'
-                for k = 1:2
-                    if k == 1
-                        ix = 1;
-                        dataTarget_beta(subject,:,:) = squeeze(d(21,:,ix));
-                    else
-                        ix = 8;
-                        dataDistractor_beta(subject,:,:) = squeeze(d(21,:,ix));
-                    end
-                end
-        end
-       
-    end
-    end
-    if modelRT == 3
-        % reaction Time not modelled
-        dataTarget(any(any(isnan(dataTarget),3),2),:,:) = [];
-        dataDistractor(any(any(isnan(dataDistractor),3),2),:,:) = [];
-        dataNoRT{1} = dataTarget; % No overlap correction
-        dataNoRT{2} = dataDistractor; % No overlap correction
-        dataNoRT{3} = dataTarget_beta; % With overlap correction
-        dataNoRT{4} = dataDistractor_beta; % With overlap correction
-    else
-        % Reaction time modelled
-        dataRT{1} = dataTarget; 
-        dataRT{2} = dataDistractor;
-        dataRT{3} = dataTarget_beta;
-        dataRT{4} = dataDistractor_beta;
-    end
+
+
+% Reaction time NOT modelled
+dataNoRT{1} = fn_p3.beta_nodc(fn_p3.formula=="formula-y~1+cat(trialtype).mat",21,:,1); % Target; no DC
+dataNoRT{2} = fn_p3.beta_nodc(fn_p3.formula=="formula-y~1+cat(trialtype).mat",21,:,8); % Distractor; no DC
+dataNoRT{3} = fn_p3.beta(fn_p3.formula=="formula-y~1+cat(trialtype).mat",21,:,1); % Target; y DC
+dataNoRT{4} = fn_p3.beta(fn_p3.formula=="formula-y~1+cat(trialtype).mat",21,:,8); % Distractor; y DC
+
+% Reaction time modelled
+dataRT{1} = fn_p3.beta_nodc(fn_p3.formula=="formula-y~1+cat(trialtype)+spl(rt,4).mat",21,:,1); % Target; no DC
+dataRT{2} = fn_p3.beta_nodc(fn_p3.formula=="formula-y~1+cat(trialtype)+spl(rt,4).mat",21,:,8); % Distractor; no DC
+dataRT{3} = fn_p3.beta(fn_p3.formula=="formula-y~1+cat(trialtype)+spl(rt,4).mat",21,:,1); % Target; y DC
+dataRT{4} = fn_p3.beta(fn_p3.formula=="formula-y~1+cat(trialtype)+spl(rt,4).mat",21,:,8); % Distractor; y DC
+
+
+%% Take care of NaN's
+for k = 1:4
+    dataRT{k}(any(any(isnan(dataRT{k}),3),2),:,:)   = [];    
+    dataNoRT{k}(any(any(isnan(dataNoRT{k}),3),2),:,:) = [];    
 end
 
 %% Baseline
-
-dataRT{1} = bsxfun(@minus, dataRT{1}, mean(dataRT{1}(:,:, tmp.ufresult_a.times<0),3));
-dataRT{2} = bsxfun(@minus, dataRT{2}, mean(dataRT{2}(:,:,tmp.ufresult_a.times<0),3));
-dataRT{3} = bsxfun(@minus, dataRT{3}, mean(dataRT{3}(:,:, tmp.ufresult_a.times<0),3));
-dataRT{4} = bsxfun(@minus, dataRT{4}, mean(dataRT{4}(:,:,tmp.ufresult_a.times<0),3));
-
-dataNoRT{1} = bsxfun(@minus, dataNoRT{1}, mean(dataNoRT{1}(:,:,tmp.ufresult_a.times<0),3));
-dataNoRT{2} = bsxfun(@minus, dataNoRT{2}, mean(dataNoRT{2}(:,:,tmp.ufresult_a.times<0),3));
-dataNoRT{3} = bsxfun(@minus, dataNoRT{3}, mean(dataNoRT{3}(:,:,tmp.ufresult_a.times<0),3));
-dataNoRT{4} = bsxfun(@minus, dataNoRT{4}, mean(dataNoRT{4}(:,:,tmp.ufresult_a.times<0),3));
+%bsl = @(data,times) data - mean(data(:,:,times<0),3); Results in NaNs
 
 
-%% Also need to load an EEG file to calculate the neighbours
+for k = 1:4
+    dataRT{k}   = bsxfun(@minus, dataRT{k}, mean(dataRT{k}(:,:, tmp.ufresult_a.times<0),3));    
+    dataNoRT{k} = bsxfun(@minus, dataNoRT{k}, mean(dataNoRT{k}(:,:,tmp.ufresult_a.times<0),3));   
+end
+
+%% Also need to load chanlocs to calculate the neighbours
 eLoc = tmp.ufresult_a.chanlocs;
 chanNeighbours = ept_ChN2(eLoc);
+times = tmp.ufresult_a.times;
 
-%%
+%% TFCE
 cfg = struct('nperm', 1500, 'neighbours', chanNeighbours(21,:));
-NoDC_NoRT = dataNoRT{1} - dataNoRT{2};
+
+% Calculate differences (distractor minus target)
+Data_noDC_noRT = squeeze(dataNoRT{2} - dataNoRT{1}); % No RT modelling + No Overlap correction
+Data_yDC_noRT = squeeze(dataNoRT{4} - dataNoRT{3}); % Overlap corrected + No RT modeling
+Data_noDC_yRT = squeeze(dataRT{2} - dataRT{1}); % No Overlap correction + RT modelled
+Data_yDC_yRT = squeeze(dataRT{4} - dataRT{3}); % Overlap correction + RT modelled
+
+% Delete the ones containing NaN (!!!!hotfix!!!!!)
+% Data_noDC_noRT(any(isnan(Data_noDC_noRT), 2),:) = [];
+% Data_yDC_noRT(any(isnan(Data_yDC_noRT), 2),:) = [];
+% Data_noDC_yRT(any(isnan(Data_noDC_yRT), 2),:) = [];
+% Data_yDC_yRT(any(isnan(Data_yDC_yRT), 2),:) = [];
+
 
 % Results = ept_TFCE(dataNoRT{1}, dataNoRT{2}, eLoc(21), 'rsample', 512, 'chn', chanNeighbours(21,:), 'nperm', 5000, 'flag_save', 0);
-[res, info] = be_ept_tfce_diff(cfg, NoDC_NoRT);
+disp('**************************************************')
+disp('Classical approach')
+disp('**************************************************')
+[res_noDC_noRT, info] = be_ept_tfce_diff(cfg, squeeze(Data_noDC_noRT));
+disp('**************************************************')
+disp('Data deconvolved but no reaction time modeled')
+disp('**************************************************')
+[res_yDC_noRT, info] = be_ept_tfce_diff(cfg, squeeze(Data_yDC_noRT));
+disp('**************************************************')
+disp('No deconcolution but reaction time modelled')
+disp('**************************************************')
+[res_noDC_yRT, info] = be_ept_tfce_diff(cfg, squeeze(Data_noDC_yRT));
+disp('**************************************************')
+disp('Data deconvolved and reaction time modeled')
+disp('**************************************************')
+[res_yDC_yRT, info] = be_ept_tfce_diff(cfg, squeeze(Data_yDC_yRT));
+disp('**************************************************')
 
+%%
+figure
+for k = {"Data_noDC_noRT","Data_yDC_noRT","Data_noDC_yRT","Data_yDC_yRT";1,2,3,4}
+    eval(strjoin(["d = ",k{1}, ";"]))
+    subplot(2,2,k{2})
+    plot(times, trimmean(squeeze(d),20), '-r', 'DisplayName','yDC-yoRT')
+    hold on,plot(times, mean(squeeze(d)), '-g', 'DisplayName','yDC-yoRT')
+    hold on,plot(times, median(squeeze(d)), '-b', 'DisplayName','yDC-yoRT')
+    ylim([-3,10])
+end
 
-
+%% Plottin for sanity checks
+figure;
+hold all
+% plot(times, mean(squeeze(dataNoRT{2})))
+% plot(times, mean(squeeze(dataNoRT{1})))
+legend
+plot(times, mean(squeeze(Data_noDC_noRT)), '--y', 'DisplayName','NoDC-NoRT')
+plot(times, mean(squeeze(Data_yDC_noRT)), '--g', 'DisplayName','yDC-NoRT')
+plot(times, mean(squeeze(Data_noDC_yRT)), '-b', 'DisplayName','NoDC-yRT')
+plot(times, mean(squeeze(Data_yDC_yRT)), '-r', 'DisplayName','yDC-yoRT')
 
 

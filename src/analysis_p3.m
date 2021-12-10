@@ -12,7 +12,7 @@ fn_p3.folder = repmat({'p3'},1,height(fn_p3))';
 %%
 all_b = nan(height(fn_p3),31,512,10);
 all_bnodc = nan(height(fn_p3),31,512,10);
-for r = 1:height(fn_p3) %[1:75 79:height(fn_p3)] % Jump over subject 37, cause one missing channel
+for r = [1:75 79:height(fn_p3)] % Jump over subject 37, cause one missing channel
     fprintf("Loading :%i/%i\n",r,height(fn_p3))
     
     tmp = load(fullfile('/store/projects/unfold_duration/local',fn_p3.folder{r},fn_p3.filename{r}));

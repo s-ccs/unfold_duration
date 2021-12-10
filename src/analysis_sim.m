@@ -1,6 +1,6 @@
 %% -----------
 %load data
-folder = 'sim_realNoise'; % Change to desired folder;
+folder = 'sim_realNoise_regularize_filtered'; % Change to desired folder;
                    % sim = initial simulation; sim2 = 2 event simulations; 
                    % sim2-1 = 2 events, double trials; sim3 = real events;
                    % sim_regularize = reularization
@@ -19,15 +19,15 @@ fn = cell2table(cat(1,fn{:}),'VariableNames',{'shape','overlap','overlapdist','n
 fn.filename = tmp_fn';
 
 %% Load data
-fn = load_sim_data(fn, folder, "box");
+fn = load_sim_data(fn, folder);
 
 %%
 %tmp = load(fullfile('local',folder,fn.filename{1}));
 
 % ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-2.0.mat" & fn.shape == "box" & fn.noise=="noise-0.00"&fn.overlap=="overlap-1";
-ix  = fn.shape=="posHalf" & fn.durEffect == "durEffect-1" & fn.iter=="iter-42" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00" & fn.overlap=="overlap-1" & fn.formula ~= "y~1";
+% ix  = fn.shape=="posHalf" & fn.durEffect == "durEffect-1" & fn.iter=="iter-42" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00" & fn.overlap=="overlap-1" & fn.formula ~= "y~1";
 % ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"&fn.overlap=="overlap-0"& fn.formula ~= "y~1";
-% ix  = fn.shape=="posNegPos" & fn.durEffect == "durEffect-1" & fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1";
+ix  = fn.shape=="posNeg" & fn.durEffect == "durEffect-1" & fn.iter=="iter-1" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1";
 % ix  = fn.shape=="posNegPos" & fn.durEffect == "durEffect-0" & fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"& fn.overlap=="overlap-1";
 
 % ix = fn.overlapdist == "uniform" & fn.shape=="posNegPos" & fn.overlapmod == "overlapmod-1.5.mat" & fn.formula == "y~1";
