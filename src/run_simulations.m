@@ -9,7 +9,8 @@ emptyEEG.srate = 100; %Hz
 emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 harmonize = 1; % Harmonize shape of Kernel? 1 = Yes; 0 = No
-saveFolder = "sim_realNoise_regularize_filtered"; % Folder to save in
+saveFolder = "sim_realNoise_regularize_filtered_low"; % Folder to save in
+filter = 0.1;
 
 %% Check for regularization (based on folder name)
 if regexp(saveFolder', regexptranslate('wildcard', '**regularize'))
@@ -25,7 +26,7 @@ N.mode = "amplitude"; % Can be either amplitude or snr
 N.value = 2; % Either amplitude value or snr range; see utl_add_sensornoise
 
 %% If real noise to be used get Noise from p3 dataset
-if (saveFolder == "sim_realNoise" && ~exist('Noise')) || (saveFolder == "sim_realNoise_regularize" && ~exist('Noise')) || (saveFolder == "sim_realNoise_regularize_filtered" && ~exist('Noise'))
+if (regexp(saveFolder', regexptranslate('wildcard', '**realNoise')) && ~exist('Noise'))
     Noise = resting_state_noise(emptyEEG.srate); 
     genNoise = 1;
 end
@@ -57,8 +58,9 @@ for shape = {'posNeg','posNegPos','hanning'} % possible {'box','posNeg','posNegP
                     end
                     
                     % filter Data to hopefully get rid of the offset
-                    if saveFolder == "sim_realNoise_regularize_filtered"
-                        EEG = pop_eegfiltnew(EEG,0.5,[]);
+                    if regexp(saveFolder', regexptranslate('wildcard', '**filtered'))
+                        EEG = pop_eegfiltnew(EEG,filter,[]);
+                        filtFlag = 1;
                     end
                     
                     for formula = {'y~1'
@@ -88,6 +90,11 @@ for shape = {'posNeg','posNegPos','hanning'} % possible {'box','posNeg','posNegP
                                 sig = sig .* 10;
                             end
                             
+                            % If filter is used during simulation zero-pad
+                            % sig and filter the theoretical shape
+                            if filtFlag
+                                sig = filt_theoretical(sig, filter);
+                            end
                             ufresult_marginal.beta      = sig;
                             ufresult_marginal.beta_nodc = sig;
                         else
