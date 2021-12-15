@@ -8,16 +8,22 @@ function fn = load_sim_data(fn, folder, jump_shape)
 
 
 % Check if results for simulation already exist as tabel
-if isfile(['/store/projects/unfold_duration/local/simulationResults/simulationResults_' folder '.csv'])
+if isfile(['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '.csv'])
     disp('Loading data from CSV file. This might take a while...')
-    fn = readtable(['/store/projects/unfold_duration/local/simulationResults/simulationResults_' folder '.csv']);
+    
+    fn = readtable(['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '.csv'], 'Delimiter', ',');
+    all_b = load(['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_beta_' folder '.mat']);
+    all_bnodc = load(['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_beta_nodc_' folder '.mat']);
+    fn.beta = all_b.all_b;
+    fn.beta_nodc = all_bnodc.all_bnodc;
+    
     disp('Data loaded from CSV file')
     return
 
 % Otherwise load results from .mat files
 else
     
-    if any(strcmp({'sim', 'sim_regularize', 'sim_realNoise', 'sim_realNoise_regularize'}, folder))
+    if any(strcmp({'sim', 'sim_regularize', 'sim_realNoise', 'sim_realNoise_regularize', 'sim_realNoise_regularize_filtered', 'sim_realNoise_regularize_filtered_low', 'sim_realNoise_filtered'}, folder))
         all_b = nan(height(fn),1,250,11); % size based on dataset used: sim/sim/_harm (1,250,11); sim2 (1,250,12)
         all_bnodc = nan(height(fn),1,250,11);
         num_flag = 1;
@@ -66,11 +72,20 @@ else
         clear tmp b b_nodc
     end
     
-    fn.beta = squeeze(all_b);
-    fn.beta_nodc = squeeze(all_bnodc);
     fn.folder =repmat({folder},1,height(fn))';
+    all_b = squeeze(all_b);
+    fn.beta = all_b;
+    all_bnodc = squeeze(all_bnodc);
+    fn.beta_nodc = all_bnodc;
     
     % Save to csv file
-    writetable(fn,['/store/projects/unfold_duration/local/simulationResults/simulationResults_' folder '.csv'])
+    if ~exist(['/store/projects/unfold_duration/local/simulationResults/' folder], 'dir')
+        mkdir(['/store/projects/unfold_duration/local/simulationResults/' folder])
+    end
+    
+    writetable(fn(:,[1:10]),['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '.csv']);
+    save(['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_beta_' folder '.mat'], 'all_b');
+    save(['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_beta_nodc_' folder '.mat'], 'all_bnodc');
+    
     return
 end

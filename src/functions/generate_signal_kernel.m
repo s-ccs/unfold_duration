@@ -1,6 +1,6 @@
 function sig = generate_signal_kernel(dur,shape,srate, harmonize,rNoise)
 start = 0.05*srate; 
-stop = dur;
+stop = dur; % In samples
 assert(stop>3*start,'signal duration is too short')
 
 %% Should shapes be harmonized?
