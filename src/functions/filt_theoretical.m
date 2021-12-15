@@ -22,6 +22,6 @@ sigEEG.data = sig;
 sigEEG = pop_eegfiltnew(sigEEG,filter,[]);
 
 % Get back original signal length
-sig = sigEEG.data(1, l:end-l, :);
+sig = sigEEG.data(1, l+1:end-l, :);
 
 return

@@ -8,9 +8,9 @@ function fn = calc_sim_MSE(fn, folder)
 
 
 % Check if results for simulation already exist as tabel
-if isfile(['/store/projects/unfold_duration/local/simulationResults/simulationResults_' folder '_MSE.csv'])
+if isfile(['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '_MSE.csv'])
     disp('Loading data from CSV file. This might take a while...')
-    fn = readtable(['/store/projects/unfold_duration/local/simulationResults/simulationResults_' folder '_MSE.csv']);
+    fn = readtable(['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '_MSE.csv']);
     disp('MSE - Data loaded from CSV file')
     return
     
@@ -56,5 +56,5 @@ else
         fn{r,'normMSE'} = fn{r,'MSE'}/fn{ix_intercept,'MSE'};
         fn{r,'normMSE_matlab'} = fn{r,'MSE_matlab'}/fn{ix_intercept,'MSE_matlab'};
     end
-    writetable(fn,['/store/projects/unfold_duration/local/simulationResults/simulationResults_' folder '_MSE.csv'])
+    writetable(fn,['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '_MSE.csv'])
 end
