@@ -3,3 +3,7 @@
 *.m~
 /stash
 /plots
+*.mexa64
+/lib/SEREEGA
+/lib/gramm
+

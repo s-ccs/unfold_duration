@@ -1,5 +1,5 @@
 %%
-tmp_fn_p3 = dir(fullfile('store/projects/unfold_duration/local','p3','*.mat'));
+tmp_fn_p3 = dir(fullfile('/store/projects/unfold_duration/local','p3','*.mat')); % Folders: p3; p3_button; p3_Stim+Button
 tmp_fn_p3 = {tmp_fn_p3.name};
 fn_p3 = cellfun(@(x)strsplit(x,'_'),tmp_fn_p3,'UniformOutput',false);
 fn_p3 = cell2table(cat(1,fn_p3{:}),'VariableNames',{'sub','formula'});
@@ -10,19 +10,36 @@ fn_p3 = cell2table(cat(1,fn_p3{:}),'VariableNames',{'sub','formula'});
 fn_p3.filename = tmp_fn_p3';
 fn_p3.folder = repmat({'p3'},1,height(fn_p3))';
 %
-all_b = nan(height(fn_p3),31,512,10);
-all_bnodc = nan(height(fn_p3),31,512,10);
+if fn_p3.folder{1} == "p3_Stim+Button"
+    all_b = nan(height(fn_p3),31,512,20);
+    all_bnodc = nan(height(fn_p3),31,512,20);
+else
+    all_b = nan(height(fn_p3),31,512,10);
+    all_bnodc = nan(height(fn_p3),31,512,10);
+end
+
 for r = [1:75 79:height(fn_p3)] % Jump over sets with only 3 betas, only subject 37
     fprintf("Loading :%i/%i\n",r,height(fn_p3))
     
-    tmp = load(fullfile('local',fn_p3.folder{r},fn_p3.filename{r}));
+    tmp = load(fullfile('/store/projects/unfold_duration/local',fn_p3.folder{r},fn_p3.filename{r}));
     b = tmp.ufresult_a.beta(:,:,:);
     b_nodc = tmp.ufresult_a.beta_nodc(:,:,:);
     if strcmp(fn_p3{r,'formula'},'formula-y~1+cat(trialtype).mat')
-        b(:,:,8:10) = b(:,:,2:4);
-        b(:,:,2:7) = repmat(b(:,:,1),1,1,6);
-        b_nodc(:,:,8:10) = b_nodc(:,:,2:4);
-        b_nodc(:,:,2:7) = repmat(b_nodc(:,:,1),1,1,6);
+        if fn_p3.folder{r} == "p3_Stim+Button"
+            b(:,:,8:10) = b(:,:,2:4);
+            b(:,:,2:7) = repmat(b(:,:,1),1,1,6);
+            b(:,:,20) = b(:,:,10);
+            b(:,:,10:19) = repmat(b(:,:,9),1,1,10);
+            b_nodc(:,:,8:10) = b_nodc(:,:,2:4);
+            b_nodc(:,:,2:7) = repmat(b_nodc(:,:,1),1,1,6);
+            b_nodc(:,:,20) = b_nodc(:,:,10);
+            b_nodc(:,:,10:19) = repmat(b_nodc(:,:,9),1,1,10);
+        else
+            b(:,:,8:10) = b(:,:,2:4);
+            b(:,:,2:7) = repmat(b(:,:,1),1,1,6);
+            b_nodc(:,:,8:10) = b_nodc(:,:,2:4);
+            b_nodc(:,:,2:7) = repmat(b_nodc(:,:,1),1,1,6);
+        end
     end
     
     
@@ -39,8 +56,8 @@ fn_p3.beta_nodc = squeeze(all_bnodc);
 
 % GA
 groupIx = findgroups(fn_p3.formula);
-GA = splitapply(@(x)trimmean(x,20),fn_p3.beta,groupIx);
-GA_nodc = splitapply(@(x)trimmean(x,20),fn_p3.beta_nodc,groupIx);
+GA = splitapply(@(x)trimmean(x,10),fn_p3.beta,groupIx);
+GA_nodc = splitapply(@(x)trimmean(x,10),fn_p3.beta_nodc,groupIx);
 fn_p3_ga = table(unique(fn_p3.formula),GA,GA_nodc,'VariableNames',{'formula','beta','beta_nodc'});
 fn_p3_ga.folder = repmat({'p3'},1,height(fn_p3_ga))';
 fn_p3_ga.filename = fn_p3{1:3,'filename'};
@@ -56,53 +73,102 @@ plot(linspace(-1,1,512),squeeze(fn_p3_ga_outlier.beta_median(1,21,:,1)))
 legend('20% trimmed mean','mean','median')
 box off
 %%
-tmp =  load(fullfile("local",fn_p3.folder{1},fn_p3.filename{2}));
+tmp =  load(fullfile("/store/projects/unfold_duration/local",fn_p3.folder{1},fn_p3.filename{2}));
 uf = tmp.ufresult_a;
 d = permute(fn_p3_ga{3,'beta_nodc'},[2 3 4 1]);
 colors = [2 219 240;2 75 120;255 181 91;186 88 0]./255;
 
 %% ERP Plot Stimulus
-times = repmat(uf.times,2,1)';
-group = repmat([1:2],512,1);
-grouplist ={'distractor','target'};
+tmp =  load(fullfile("/store/projects/unfold_duration/local",fn_p3.folder{1},fn_p3.filename{2}));
+uf = tmp.ufresult_a;
+times = repmat(uf.times,3,1)';
+group = repmat([1:3],512,1);
+grouplist ={'distractor','target', 'difference'};
 group = grouplist(group);
 
+% Colour scheme in RGB [N by 3]
+colors = [2 219 240; 2 75 120; 255 181 91; 186 88 0; 190 190 190]./255;
+
+% For pure diff plot
+diff_mat = [];
+diff_times = repmat(uf.times,4,1)';
+diff_group = repmat([1:4],512,1);
+diff_list = {'classical', 'overlap modelled', 'reaction-time modelled', 'reaction-time and overlap modelled'};
+diff_group = diff_list(diff_group);
+diff_colors = [0 255 255;
+               0 255 128;
+               0 128 255;
+               0 0 255]./255;
+
 for modelRT = [3 2]
+    if modelRT == 3
+        RTmodelled = "no-RT";
+    else
+        RTmodelled = "yes-RT";
+    end
 for beta = {'beta_nodc','beta'}
     d = permute(fn_p3_ga{modelRT,beta{1}},[2 3 4 1]); % Just to take care of singleton dimension
     
     % d_sub = squeeze(fn_p3.beta(groupIx == 3,21,:,1:2));
     
-    for k = 1:2
+    for k = 1%:2
         if k == 1
             ix = [1 8];
         else
-            ix = 9:10;
+            if fn_p3.folder{1} == "p3_Stim+Button"
+                ix = [9 20];
+                ixd{2} = [9 20];
+            else
+                ix = 9:10;
+            end
         end
+        
         data = squeeze(d(21,:,ix));
+        data_diff = data(:,2) - data(:,1);%calculate difference wave
+        data = [data data_diff];
+        diff_mat = [diff_mat, data_diff];
+        
         figure
         g = gramm('x',times(:),'y',data(:),'color',group(:));
         
         g.geom_line()
         g.set_text_options('base_size',14)
-        g.set_color_options('map', colors((k-1)*2+(1:2),:))
+        g.set_color_options('map', colors([5 (k-1)*2+(1:2)],:))
         ax = g.draw();
 %         ax.facet_axes_handles(1).YLim = [-6 15];
         
         xlabel(ax.facet_axes_handles(1),'time [s]');
         ylabel(ax.facet_axes_handles(1),'ERP [µV]');
-        ax.facet_axes_handles(1).YLim = [-6.5 12];
+%         ax.facet_axes_handles(1).YLim = [-6.5 12];
         if k == 1
             ax.facet_axes_handles(1).XLim = [-0.2 1];
+            ax.facet_axes_handles(1).YLim = [-10 12];
         else
             ax.facet_axes_handles(1).XLim = [-1 1];
         end
-        set(gcf,'name',sprintf('beta-%s',beta{1}))
+        set(gcf,'name',sprintf('beta-%s_%s',beta{1}, RTmodelled))
 
     end
 end
 end
 
+% 
+% Figure for Difference waves on one plot
+figure
+g = gramm('x',diff_times(:),'y',diff_mat(:),'color',diff_group(:));
+
+g.geom_line()
+g.set_text_options('base_size',14)
+g.set_color_options('map', diff_colors)
+ax = g.draw();
+
+xlabel(ax.facet_axes_handles(1),'time [s]');
+ylabel(ax.facet_axes_handles(1),'ERP [µV]');
+ax.facet_axes_handles(1).YLim = [-6.5 12];
+ax.facet_axes_handles(1).XLim = [-0.2 1];
+set(gcf,'name','Difference Waves')
+        
+       
 %% RT distributions
 % collect all RTs
 tablesplines= fn_p3(groupIx == 2,:);
@@ -215,7 +281,7 @@ end
 %% draw single subject estimates
 d = permute(fn_p3{:,'beta'},[2 3 4 1]);
 formulas = unique(fn_p3.formula);
-nsub = size(d,4)/length(formulas);
+nsub = 9; %(size(d,4)/length(formulas));
 times = repmat(uf.times,6,1,nsub);
 times = permute(times,[2 1 3]);
 sub = repmat(1:nsub,512,1,6);
@@ -227,12 +293,12 @@ group = grouplist(group);
 for k = 1:3;%[2 1 3]
     switch k
         case 2
-    data = squeeze(d(21,:,3:8,fn_p3.formula == string(formulas{k})));
+    data = squeeze(d(21,:,3:8,find(fn_p3.formula == string(formulas{k}),9)));
         case 1
     
-            data = squeeze(d(21,:,2:7,fn_p3.formula == string(formulas{k})));
+            data = squeeze(d(21,:,2:7,find(fn_p3.formula == string(formulas{k}),9)));
         case 3
-            data = squeeze(d(21,:,2,fn_p3.formula == string(formulas{k})));
+            data = squeeze(d(21,:,2,find(fn_p3.formula == string(formulas{k}),9)));
             times = times(:,1,:);
             sub = sub(:,1,:);
             group = group(:,1,:);

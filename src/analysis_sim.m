@@ -1,6 +1,6 @@
 %% -----------
 %load data
-folder = 'sim_realNoise_regularize_filtered'; % Change to desired folder;
+folder = 'sim_realNoise_filtered'; % Change to desired folder;
                    % sim = initial simulation; sim2 = 2 event simulations; 
                    % sim2-1 = 2 events, double trials; sim3 = real events;
                    % sim_regularize = reularization
@@ -11,6 +11,9 @@ folder = 'sim_realNoise_regularize_filtered'; % Change to desired folder;
                    %                   regularization (only noise condition)
                    % sim_realNoise_regularize_filtered = filtered at 0.5
                    % sim_realNoise_regularize_filtered01 = filtered at 0.1
+                   % sim_realNoise_scaledHanning_regularize_filtered =
+                   % scaled Hanning shape only; regularized
+                   % 'sim_realNoise_playground' = various;
 
 tmp_fn = dir(fullfile('/store/projects/unfold_duration/local',folder, '*.mat'));
 tmp_fn = {tmp_fn.name};
@@ -30,7 +33,7 @@ fn = load_sim_data(fn, folder);
 % ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-2.0.mat" & fn.shape == "box" & fn.noise=="noise-0.00"&fn.overlap=="overlap-1";
 % ix  = fn.shape=="posHalf" & fn.durEffect == "durEffect-1" & fn.iter=="iter-42" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00" & fn.overlap=="overlap-1" & fn.formula ~= "y~1";
 % ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"&fn.overlap=="overlap-0"& fn.formula ~= "y~1";
-ix  = fn.shape=="posNeg" & fn.durEffect == "durEffect-1" & fn.iter=="iter-3" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1";
+ix  = fn.shape=="scaledHanning" & fn.durEffect == "durEffect-1" & fn.iter=="iter-3" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1";
 % ix  = fn.shape=="posNegPos" & fn.durEffect == "durEffect-0" & fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"& fn.overlap=="overlap-1";
 
 % ix = fn.overlapdist == "uniform" & fn.shape=="posNegPos" & fn.overlapmod == "overlapmod-1.5.mat" & fn.formula == "y~1";
@@ -42,8 +45,8 @@ fn = calc_sim_MSE(fn, folder);
 
 %% Display MSE results
 figure
-fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1",:);
-g = gramm('x',fn_plot.shape,'y',fn_plot.normMSE,'color',fn_plot.formula,'marker',fn_plot.shape);
+fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1" & fn.noise=="noise-1.00",:);
+g = gramm('x',fn_plot.shape,'y',fn_plot.normMSE_nodc,'color',fn_plot.formula,'marker',fn_plot.shape);
 
 %g.stat_violin('dodge',1,'width',0.3)
 g.geom_jitter('dodge',1);
@@ -54,20 +57,35 @@ g.axe_property('ylim',[-0.1 1.5])
 g.draw()
 %% Display MSE results (section to change and plot specific results)
 figure
-fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1" & fn.overlap == "overlap-1" & fn.shape == "posNegPos",:);
-g = gramm('x',fn_plot.shape,'y',fn_plot.normMSE,'color',fn_plot.formula,'marker',fn_plot.shape);
+fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1" ,:);
+g = gramm('x',fn_plot.shape,'y',fn_plot.MSE,'color',fn_plot.formula,'marker',fn_plot.shape);
 
 %g.stat_violin('dodge',1,'width',0.3)
 g.geom_jitter('dodge',1);
 %g.geom_line()c
 g.facet_grid(fn_plot.noise,fn_plot.overlap,'scale','free_y')
 g.fig(fn_plot.overlapdist)
+% g.axe_property('ylim',[-0.1 1.5])
+g.draw()
+
+%% Display MSE mean results with SD (section to change and plot specific results)
+
+figure
+fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1" & fn.noise=="noise-1.00",:);
+g = gramm('x',fn_plot.shape,'y',fn_plot.normMSE,'color',fn_plot.formula,'marker',fn_plot.shape);
+
+% g.stat_violin('dodge',1,'width',0.3)
+g.stat_violin('normalization','count','fill','edge');
+g.stat_boxplot('width',0.15);
+% g.stat_boxplot('dodge',1,'width',0.3)
+% g.stat_summary('dodge',1,'width',0.3, 'type', 'quartile')
+% g.geom_jitter('dodge',1);
+%g.geom_line()
+
+g.facet_grid(fn_plot.noise,fn_plot.overlap,'scale','free_y')
+g.fig(fn_plot.overlapdist)
 g.axe_property('ylim',[-0.1 1.5])
 g.draw()
-%% save table and ERPs individually
-% writetable(fn(:,[1:8 11 12]),'local/2020-12-14_simulationResults_real_Noise.csv')
-
-% fn= removevars(fn,{'beta', 'beta_nodc'});
 %% duration distributions
 % 
 % all_splines(height(fn)) = struct();

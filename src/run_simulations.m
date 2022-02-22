@@ -9,8 +9,8 @@ emptyEEG.srate = 100; %Hz
 emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 harmonize = 1; % Harmonize shape of Kernel? 1 = Yes; 0 = No
-saveFolder = "sim_realNoise_regularize_filtered_low"; % Folder to save in
-filter = 0.1;
+saveFolder = "sim_realNoise_scaledHanning_regularize_filtered"; % Folder to save in
+filter = 0.5;
 
 %% Check for regularization (based on folder name)
 if regexp(saveFolder', regexptranslate('wildcard', '**regularize'))
@@ -20,7 +20,7 @@ else
     regularize = 0;
     noiseIDX = [0 1];
 end
-%% Noise options using SEREEGA function
+%% Noise options using SEREEGA function (deprecated)
 N = struct();
 N.mode = "amplitude"; % Can be either amplitude or snr
 N.value = 2; % Either amplitude value or snr range; see utl_add_sensornoise
@@ -34,9 +34,9 @@ end
 % Start Parpool 
 % parpool('local', 10)
 %%
-for iter = 1 %:50
+for iter = 1:10 %50
 for durEffect = [0 1]
-for shape = {'posNeg','posNegPos','hanning'} % possible {'box','posNeg','posNegPos','hanning', 'posHalf'}
+for shape = {'scaledHanning'} % possible {'box','posNeg','posNegPos','hanning', 'posHalf', 'scaledHanning'}
     for overlap = [0 1]
         for overlapdistribution ={'uniform','halfnormal'}
             for noise = noiseIDX
@@ -61,6 +61,8 @@ for shape = {'posNeg','posNegPos','hanning'} % possible {'box','posNeg','posNegP
                     if regexp(saveFolder', regexptranslate('wildcard', '**filtered'))
                         EEG = pop_eegfiltnew(EEG,filter,[]);
                         filtFlag = 1;
+                    else
+                        filtFlag = 0;
                     end
                     
                     for formula = {'y~1'
@@ -78,8 +80,14 @@ for shape = {'posNeg','posNegPos','hanning'} % possible {'box','posNeg','posNegP
                             durations = [ufresult_marginal.param(2:end).value];
                             tmin = sum(ufresult_marginal.times<=0);
                             sig = nan(size(ufresult_marginal.beta));
+                            
+                            % For scaled hanning calculate scaling factor 
+                            sorted_dur = sort(unique(durations));
+                            scale_factors = linspace(1,2, length(sorted_dur));
+                            
                             for d = 1:length(durations)
-                                tmp= generate_signal_kernel(durations(d)*EEG.srate*overlapModifier,shape{1},EEG.srate,harmonize, 0);
+                                tmp_scale_factor = scale_factors(sorted_dur == durations(d));
+                                tmp= generate_signal_kernel(durations(d)*EEG.srate*overlapModifier,shape{1},EEG.srate,harmonize, 0, tmp_scale_factor);
                                 sig(1,tmin+1:min(tmin+length(tmp),end),d+1) = tmp(1:min(end,size(sig,2)-tmin));
                             end
                             
@@ -95,6 +103,7 @@ for shape = {'posNeg','posNegPos','hanning'} % possible {'box','posNeg','posNegP
                             if filtFlag
                                 sig = filt_theoretical(sig, filter);
                             end
+                            
                             ufresult_marginal.beta      = sig;
                             ufresult_marginal.beta_nodc = sig;
                         else

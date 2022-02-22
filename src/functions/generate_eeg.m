@@ -29,6 +29,19 @@ for e = 1:length(event_lat)
     EEG.event(e).type = 'eventA';
 end
 
+% Calculate scaling factor for upward scaling of shape (only for scaled
+% Hannaing)
+
+dur_all = zeros(length(event_lat(1:end-1)),1);
+for e = 1:length(event_lat(1:end-1))
+    evt1 = EEG.event(e).latency;
+    evt2 = event_lat(e + 1);
+    tmp_dur = evt2-evt1;
+    dur_all(e) = tmp_dur;
+end
+sorted_dur = sort(unique(dur_all));
+scale_factors = linspace(1,2, length(sorted_dur));
+
 %----------------------------
 % generate signal and add them to a continuous EEG
 
@@ -40,6 +53,9 @@ for e = 1:length(event_lat(1:end-1))
     evt2 = event_lat(e + 1);
     dur = evt2-evt1;
     
+    % Decide on scaling factor here; Use linspace variable from above
+    tmp_scale_factor = scale_factors(dur == sorted_dur);
+    
     if options.durEffect
         % duration effects shape
           sigduration = dur*options.overlapModifier;
@@ -48,7 +64,7 @@ for e = 1:length(event_lat(1:end-1))
         sigduration = mean(diff([EEG.event.latency]));
     end
     
-    % Check if real noise is used, if yes multiply 
+    % Check if real noise is used, if yes multiply and cancel SEEREGA noise
     if ~options.realNoise{1}
         rNoise = 0;
     else
@@ -57,7 +73,7 @@ for e = 1:length(event_lat(1:end-1))
     end
     
     % starting sample
-    sig = generate_signal_kernel(sigduration, options.shape, EEG.srate, harmonize, rNoise);
+    sig = generate_signal_kernel(sigduration, options.shape, EEG.srate, harmonize, rNoise, tmp_scale_factor);
     start = find(sig~=0,1);
     EEG.event(e).dur = dur./EEG.srate;
     EEG.event(e).sigdur = (find(sig(start:end)==0,1)+start)./EEG.srate;

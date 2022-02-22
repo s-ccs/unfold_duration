@@ -1,4 +1,4 @@
-function sig = generate_signal_kernel(dur,shape,srate, harmonize,rNoise)
+function sig = generate_signal_kernel(dur,shape,srate, harmonize,rNoise, scaling)
 start = 0.05*srate; 
 stop = dur; % In samples
 assert(stop>3*start,'signal duration is too short')
@@ -12,6 +12,7 @@ end
 
 sig = zeros(round(2*length(eventsamples)),1);
 
+
 %% Is real noise used?
 if ~rNoise
     multiplier = 1;
@@ -22,6 +23,11 @@ end
 switch shape
     case "hanning"
         sig(eventsamples) = hanning(length(eventsamples));
+        sig = sig .* multiplier;
+        
+    case "scaledHanning"
+        sig(eventsamples) = hanning(length(eventsamples));
+        sig = sig .* scaling;
         sig = sig .* multiplier;
         
     case "posHalf"

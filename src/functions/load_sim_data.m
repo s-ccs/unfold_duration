@@ -23,7 +23,7 @@ if isfile(['/store/projects/unfold_duration/local/simulationResults/' folder '/s
 % Otherwise load results from .mat files
 else
     
-    if any(strcmp({'sim', 'sim_regularize', 'sim_realNoise', 'sim_realNoise_regularize', 'sim_realNoise_regularize_filtered', 'sim_realNoise_regularize_filtered_low', 'sim_realNoise_filtered'}, folder))
+    if any(strcmp({'sim', 'sim_regularize'}, folder)) || (regexp(folder, regexptranslate('wildcard', '**realNoise')))
         all_b = nan(height(fn),1,250,11); % size based on dataset used: sim/sim/_harm (1,250,11); sim2 (1,250,12)
         all_bnodc = nan(height(fn),1,250,11);
         num_flag = 1;
