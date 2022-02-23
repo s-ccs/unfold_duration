@@ -28,8 +28,6 @@ if ~regularize
     EEG = uf_glmfit(EEG);
     EEG = uf_epoch(EEG,cfgTimeexpand);
     EEG = uf_glmfit_nodc(EEG);
-    ufresult = uf_condense(EEG);
-    ufresult_marginal = uf_addmarginal(uf_predictContinuous(ufresult));
 else
     EEG = uf_glmfit(EEG, 'method', 'glmnet', 'glmnetalpha', 0);
     EEG = uf_epoch(EEG,cfgTimeexpand);
@@ -38,6 +36,10 @@ else
     else
         EEG = uf_glmfit_nodc(EEG, 'method', 'glmnet', 'glmnetalpha', 0);
     end
+end
+
     ufresult = uf_condense(EEG);
-    ufresult_marginal = uf_addmarginal(uf_predictContinuous(ufresult));
+    % To not give a bias towards bin estimation predict more quantiles than
+    % 10 
+    ufresult_marginal = uf_addmarginal(uf_predictContinuous(ufresult, 'auto_n', 15));
 end

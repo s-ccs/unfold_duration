@@ -9,7 +9,7 @@ emptyEEG.srate = 100; %Hz
 emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 harmonize = 1; % Harmonize shape of Kernel? 1 = Yes; 0 = No
-saveFolder = "sim_realNoise_scaledHanning_regularize_filtered"; % Folder to save in
+saveFolder = "sim_realNoise_HanningShapes_filtered"; % Folder to save in
 filter = 0.5;
 
 %% Check for regularization (based on folder name)
@@ -36,7 +36,7 @@ end
 %%
 for iter = 1:10 %50
 for durEffect = [0 1]
-for shape = {'scaledHanning'} % possible {'box','posNeg','posNegPos','hanning', 'posHalf', 'scaledHanning'}
+for shape = {'hanning', 'posHalf', 'scaledHanning'} % possible {'box','posNeg','posNegPos','hanning', 'posHalf', 'scaledHanning'}
     for overlap = [0 1]
         for overlapdistribution ={'uniform','halfnormal'}
             for noise = noiseIDX
@@ -57,7 +57,8 @@ for shape = {'scaledHanning'} % possible {'box','posNeg','posNegPos','hanning', 
                         EEG.event(e).durbin = binEdges(indx(e));
                     end
                     
-                    % filter Data to hopefully get rid of the offset
+                    % filter Data to get rid of the offset introduced by
+                    % the simulation
                     if regexp(saveFolder', regexptranslate('wildcard', '**filtered'))
                         EEG = pop_eegfiltnew(EEG,filter,[]);
                         filtFlag = 1;
@@ -76,12 +77,12 @@ for shape = {'scaledHanning'} % possible {'box','posNeg','posNegPos','hanning', 
                         if formula{1} == "theoretical"
                             % in this case we produce the "ideal" simulation
                             % kernel
-                            assert(length(ufresult_marginal.param) == 11) % make sure we are correct here
+                            assert(length(ufresult_marginal.param) == 16) % make sure we are correct here
                             durations = [ufresult_marginal.param(2:end).value];
                             tmin = sum(ufresult_marginal.times<=0);
                             sig = nan(size(ufresult_marginal.beta));
                             
-                            % For scaled hanning calculate scaling factor 
+                            % For scaled hanning calculate scaling factor  
                             sorted_dur = sort(unique(durations));
                             scale_factors = linspace(1,2, length(sorted_dur));
                             

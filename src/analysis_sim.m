@@ -1,6 +1,6 @@
 %% -----------
 %load data
-folder = 'sim_realNoise_filtered'; % Change to desired folder;
+folder = 'sim_realNoise_HanningShapes_filtered'; % Change to desired folder;
                    % sim = initial simulation; sim2 = 2 event simulations; 
                    % sim2-1 = 2 events, double trials; sim3 = real events;
                    % sim_regularize = reularization
@@ -8,11 +8,13 @@ folder = 'sim_realNoise_filtered'; % Change to desired folder;
                    % sim_realNoise_filtered = filtered at 0.5
                    % sim_newNoise = With SEREEGA noise
                    % sim_realNoise_regularize = real noise with
-                   %                   regularization (only noise condition)
+                   %    regularization (only noise condition)
                    % sim_realNoise_regularize_filtered = filtered at 0.5
                    % sim_realNoise_regularize_filtered01 = filtered at 0.1
                    % sim_realNoise_scaledHanning_regularize_filtered =
-                   % scaled Hanning shape only; regularized
+                   %    scaled Hanning shape only; regularized
+                   % "sim_realNoise_HanningShapes_filtered"= final three
+                   %    shapes used
                    % 'sim_realNoise_playground' = various;
 
 tmp_fn = dir(fullfile('/store/projects/unfold_duration/local',folder, '*.mat'));
@@ -45,8 +47,8 @@ fn = calc_sim_MSE(fn, folder);
 
 %% Display MSE results
 figure
-fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1" & fn.noise=="noise-1.00",:);
-g = gramm('x',fn_plot.shape,'y',fn_plot.normMSE_nodc,'color',fn_plot.formula,'marker',fn_plot.shape);
+fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1",:);
+g = gramm('x',fn_plot.shape,'y',fn_plot.normMSE,'color',fn_plot.formula,'marker',fn_plot.shape);
 
 %g.stat_violin('dodge',1,'width',0.3)
 g.geom_jitter('dodge',1);
@@ -57,8 +59,8 @@ g.axe_property('ylim',[-0.1 1.5])
 g.draw()
 %% Display MSE results (section to change and plot specific results)
 figure
-fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1" ,:);
-g = gramm('x',fn_plot.shape,'y',fn_plot.MSE,'color',fn_plot.formula,'marker',fn_plot.shape);
+fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1" & fn.noise=="noise-1.00",:);
+g = gramm('x',fn_plot.shape,'y',fn_plot.normMSE_nodc,'color',fn_plot.formula,'marker',fn_plot.shape);
 
 %g.stat_violin('dodge',1,'width',0.3)
 g.geom_jitter('dodge',1);
