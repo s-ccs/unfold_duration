@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.5
+# v0.19.4
 
 using Markdown
 using InteractiveUtils
@@ -9,7 +9,12 @@ begin
 	using CSV, DataFrames
 	using CairoMakie, AlgebraOfGraphics, MixedModelsMakie
 	using GLM, StatsModels, MixedModels
+	using DataFramesMeta
+	using StatsBase
 end
+
+# ╔═╡ d59f07dd-c3a9-4e70-9d11-10520c2f7a3f
+set_theme!(theme_minimal())
 
 # ╔═╡ fd91800c-9f35-4b05-a21e-aa3c55a05361
 begin
@@ -20,24 +25,40 @@ begin
 	df = CSV.read(fpath, DataFrame)
 end
 
+# ╔═╡ ca09839f-63cc-42e2-82aa-a1c052c997a2
+
+	ovDF = @rsubset(df,
+		:noise =="noise-1.00",
+		:overlap == "overlap-1",
+		:overlapmod == "overlapmod-1.5.mat",
+		:overlapdist == "halfnormal",
+		:durEffect == "durEffect-1",
+		:formula != "theoretical",
+		:formula !="y~1",
+	)
+
 # ╔═╡ 9acacc99-c369-440f-8041-a70df05fd27d
-begin
+let
 	# Plot to inspect overlap
-	ovDF = df[(df.noise .== "noise-0.00") .& 
-				(df.overlap .== "overlap-1") .& 
-				(df.overlapdist .== "halfnormal") .& 
-				(df.durEffect .== "durEffect-1") .& 
-				(df.formula .!= "theoretical") .& 
-				(df.formula .!= "y~1"), :]
+
 	
-	OVplt1 = data(ovDF) * visual(Violin) * mapping(:shape, :MSE, color=:formula, dodge=:formula)
+	plt = data(ovDF) * visual(Violin) * mapping(:shape, :MSE, color=:formula, dodge=:formula)
 	#plt = data(filtDF) * visual(BoxPlot, show_notch=true) * mapping(:shape, :normMSE, color=:formula, dodge=:formula, layout=:overlap)
 
-	OVfig = draw(OVplt1)
+	OVfig = draw(plt)
 	#ylims!(-1, 3)
 	#hlines!([0, 1])
 	current_figure()
 end
+
+# ╔═╡ f6f70f69-a248-4d51-9c7a-2d69bc596049
+	let
+		agg = @by(ovDF,[:shape,:formula],:MSE=mean(:MSE))
+		data(agg) * visual(Scatter) * mapping(:shape, :MSE, color=:formula) |> draw
+	
+
+	end
+
 
 # ╔═╡ 66f22ff2-a16c-4a07-a782-81d14665af12
 begin
@@ -96,19 +117,23 @@ AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DataFramesMeta = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
 GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
 MixedModels = "ff71e718-51f3-5ec2-a782-8ffcbfa3c316"
 MixedModelsMakie = "b12ae82c-6730-437f-aff9-d2c38332a376"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 
 [compat]
 AlgebraOfGraphics = "~0.6.7"
 CSV = "~0.10.4"
-CairoMakie = "~0.8.3"
+CairoMakie = "~0.8.2"
 DataFrames = "~1.3.4"
+DataFramesMeta = "~0.11.0"
 GLM = "~1.7.0"
 MixedModels = "~4.6.4"
 MixedModelsMakie = "~0.3.15"
+StatsBase = "~0.33.16"
 StatsModels = "~0.6.30"
 """
 
@@ -218,15 +243,20 @@ version = "1.0.5"
 
 [[deps.CairoMakie]]
 deps = ["Base64", "Cairo", "Colors", "FFTW", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "Makie", "SHA"]
-git-tree-sha1 = "5b4842a5c7e49020e25d3abe1028f8feffd636f1"
+git-tree-sha1 = "cb87c60a56059760d53a4f0dd3b822b20a448a9d"
 uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-version = "0.8.3"
+version = "0.8.2"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
 git-tree-sha1 = "4b859a208b2397a7a623a03449e4636bdb17bcf2"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.16.1+1"
+
+[[deps.Chain]]
+git-tree-sha1 = "339237319ef4712e6e5df7758d0bccddf5c237d9"
+uuid = "8be319e6-bccf-4806-a6f7-6fae938471bc"
+version = "0.4.10"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
@@ -284,9 +314,9 @@ version = "0.11.2"
 
 [[deps.ColorVectorSpace]]
 deps = ["ColorTypes", "FixedPointNumbers", "LinearAlgebra", "SpecialFunctions", "Statistics", "TensorCore"]
-git-tree-sha1 = "d08c20eef1f2cbc6e60fd3612ac4340b89fea322"
+git-tree-sha1 = "3f1f500312161f1ae067abe07d13b40f78f32e07"
 uuid = "c3611d14-8923-5661-9e6a-0046d554d3a4"
-version = "0.9.9"
+version = "0.9.8"
 
 [[deps.Colors]]
 deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
@@ -325,6 +355,12 @@ deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExte
 git-tree-sha1 = "daa21eb85147f72e41f6352a57fccea377e310a9"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 version = "1.3.4"
+
+[[deps.DataFramesMeta]]
+deps = ["Chain", "DataFrames", "MacroTools", "OrderedCollections", "Reexport"]
+git-tree-sha1 = "f1d89a07475dc4b03c08543d1c6b4b2945f33eca"
+uuid = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
+version = "0.11.0"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -369,9 +405,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "d29d8faf1a0ca59167f04edd4d0eb971a6ae009c"
+git-tree-sha1 = "8a6b49396a4058771c5c072239b2e0a76e2e898c"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.59"
+version = "0.25.58"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -654,9 +690,9 @@ version = "0.21.3"
 
 [[deps.JSON3]]
 deps = ["Dates", "Mmap", "Parsers", "StructTypes", "UUIDs"]
-git-tree-sha1 = "fd6f0cae36f42525567108a42c1c674af2ac620d"
+git-tree-sha1 = "8c1f668b24d999fb47baf80436194fdccec65ad2"
 uuid = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
-version = "1.9.5"
+version = "1.9.4"
 
 [[deps.JpegTurbo]]
 deps = ["CEnum", "FileIO", "ImageCore", "JpegTurbo_jll", "TOML"]
@@ -788,11 +824,17 @@ git-tree-sha1 = "e595b205efd49508358f7dc670a940c790204629"
 uuid = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
 version = "2022.0.0+0"
 
+[[deps.MacroTools]]
+deps = ["Markdown", "Random"]
+git-tree-sha1 = "3d3e902b31198a27340d0bf00d6ac452866021cf"
+uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
+version = "0.5.9"
+
 [[deps.Makie]]
 deps = ["Animations", "Base64", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "Distributions", "DocStringExtensions", "FFMPEG", "FileIO", "FixedPointNumbers", "Formatting", "FreeType", "FreeTypeAbstraction", "GeometryBasics", "GridLayoutBase", "ImageIO", "IntervalSets", "Isoband", "KernelDensity", "LaTeXStrings", "LinearAlgebra", "MakieCore", "Markdown", "Match", "MathTeXEngine", "Observables", "OffsetArrays", "Packing", "PlotUtils", "PolygonOps", "Printf", "Random", "RelocatableFolders", "Serialization", "Showoff", "SignedDistanceFields", "SparseArrays", "Statistics", "StatsBase", "StatsFuns", "StructArrays", "UnicodeFun"]
-git-tree-sha1 = "96e1be5153bd04212e8a9fa19b76f8eff1bb9432"
+git-tree-sha1 = "048aec015ad88eb5c642d731e3e23f1b805ae8b3"
 uuid = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-version = "0.17.3"
+version = "0.17.2"
 
 [[deps.MakieCore]]
 deps = ["Observables"]
@@ -828,9 +870,9 @@ version = "0.7.8"
 
 [[deps.MathTeXEngine]]
 deps = ["AbstractTrees", "Automa", "DataStructures", "FreeTypeAbstraction", "GeometryBasics", "LaTeXStrings", "REPL", "RelocatableFolders", "Test"]
-git-tree-sha1 = "620a231037c4513639b57c5e09519e26ee0f149e"
+git-tree-sha1 = "70e733037bbf02d691e78f95171a1fa08cdc6332"
 uuid = "0a4f8689-d25c-4efe-a92b-7142dfc1aa53"
-version = "0.4.0"
+version = "0.2.1"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -911,9 +953,9 @@ version = "0.5.1"
 
 [[deps.OffsetArrays]]
 deps = ["Adapt"]
-git-tree-sha1 = "52addd9e91df8a6a5781e5c7640787525fd48056"
+git-tree-sha1 = "e6c5f47ba51b734a4e264d7183b6750aec459fa0"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.11.2"
+version = "1.11.1"
 
 [[deps.Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1103,9 +1145,9 @@ version = "1.2.2"
 
 [[deps.RelocatableFolders]]
 deps = ["SHA", "Scratch"]
-git-tree-sha1 = "307761d71804208c0c62abdbd0ea6822aa5bbefd"
+git-tree-sha1 = "cdbd3b1338c72ce29d9584fdbe9e9b70eeb5adca"
 uuid = "05181044-ff0b-4ac5-8273-598c1e38db00"
-version = "0.2.0"
+version = "0.1.3"
 
 [[deps.Requires]]
 deps = ["UUIDs"]
@@ -1462,8 +1504,11 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╠═eb441a74-da78-11ec-0797-270724f92917
+# ╠═d59f07dd-c3a9-4e70-9d11-10520c2f7a3f
 # ╠═fd91800c-9f35-4b05-a21e-aa3c55a05361
+# ╠═ca09839f-63cc-42e2-82aa-a1c052c997a2
 # ╠═9acacc99-c369-440f-8041-a70df05fd27d
+# ╠═f6f70f69-a248-4d51-9c7a-2d69bc596049
 # ╠═66f22ff2-a16c-4a07-a782-81d14665af12
 # ╠═1558783c-aa5a-49ba-a946-fb34ca4cdc3d
 # ╠═d2a0ac61-1091-4023-b2e9-9e2b2baea233

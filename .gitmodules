@@ -10,3 +10,6 @@
 [submodule "SEREEGA"]
 	path = SEREEGA
 	url = https://github.com/lrkrol/SEREEGA.git
+[submodule "lib/gramm"]
+	path = lib/gramm
+	url = https://github.com/piermorel/gramm
