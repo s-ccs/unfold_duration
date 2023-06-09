@@ -6,4 +6,4 @@
 *.mexa64
 /lib/SEREEGA
 /lib/gramm
-
+/src/PlutoNB/*.eps
