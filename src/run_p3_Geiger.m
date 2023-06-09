@@ -1,6 +1,5 @@
 %% Script running on custom-preprocessed ERP-Core-preprocessed data
 % re-filters
-% auto clean via ASR - could be removed because it was run in preprocess_p3
 % and saved to EEG.reject.rejmanual
 % run unfold
 
@@ -11,77 +10,61 @@ badSubject = [];
 
 for sub = 1:40
     %%
-    %     filename = ['C:/Users/behinger/Downloads/P3_clean/' num2str(sub) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set'];
-    %     filename_csv= ['C:/Users/behinger/Downloads/P3_clean/' num2str(sub) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set.csv'];
-    filename = ['/store/projects/unfold_duration/local/P3_clean/' num2str(sub) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set'];
-    filename_csv= ['/store/projects/unfold_duration/local/P3_clean/csv/' num2str(sub) '_P3_shifted_ds_reref_ucbip_hpfilt_ica_weighted_clean.set.csv'];
+
+    if sub < 10
+        filename = ['/store/data/MSc_EventDuration/derivatives/preprocessed_Oddball/sub-00' num2str(sub) '/eeg/sub-00' num2str(sub) '_ses-001_task-Oddball_run-001_eeg.set'];
+    else
+        filename = ['/store/data/MSc_EventDuration/derivatives/preprocessed_Oddball/sub-0' num2str(sub) '/eeg/sub-0' num2str(sub) '_ses-001_task-Oddball_run-001_eeg.set'];
+    end
+    
     try
-        csv = readtable(filename_csv);
+        EEG= pop_loadset(filename);
     catch e
         warning(e.message)
         badSubject = unique([badSubject sub]);
         continue
     end
     
-    
-    EEG= pop_loadset(filename);
         
     EEG = pop_eegfiltnew(EEG,0.5,[]);
     
-    winrej = uf_continuousArtifactDetectASR(EEG);
-    
-    % rename to be used in EEG
-    EEG.event = table2struct(csv);
-    for e  = 1:length(EEG.event)
-        EEG.event(e).type = EEG.event(e).eventtype;
-        
-        % manual interaction
-        if EEG.event(e).trialtype == "target"
-            EEG.event(e).rtDis = 0;
-            EEG.event(e).rtTar = EEG.event(e).rt;
-        elseif EEG.event(e).trialtype == "distractor"
-            EEG.event(e).rtDis = EEG.event(e).rt;
-            EEG.event(e).rtTar = 0;
-        end
-        
-    end
-    badIx = cellfun(@(x)isnan(x),{EEG.event.rt});
+    badIx = cellfun(@(x)isnan(x),{EEG.event.response_time});
     EEG.event(badIx) = [];
     %EEG = pop_reref(EEG);
     %% run for different conditions
-    cond_folder = {'p3', 'p3_button', 'p3_Stim+Button'};
+    cond_folder = {'p3_geiger', 'p3_button_geiger', 'p3_Stim+Button_geiger'};
     for folder = cond_folder
-        for formula = {'y~1+cat(trialtype)'
-                'y~1+cat(trialtype)+rt'
-                'y~1+cat(trialtype)+spl(rt,4)'
+        for formula = {'y~1+cat(condition)'
+                'y~1+cat(condition)+response_time'
+                'y~1+cat(condition)+spl(response_time,4)'
                 ...%'y~1+cat(trialtype)+spl(rtDis,4) + spl(rtTar,4)'
                 }'
             %for k = 1:2
             
             switch folder{1}
                 % Model RT in respect to both stimulus and button press
-                case 'p3_Stim+Button'
-                    EEG = uf_designmat(EEG,'eventtypes',{'stimulus','button'},'formula',...
+                case 'p3_Stim+Button_geiger'
+                    EEG = uf_designmat(EEG,'eventtypes',{'stimOnset','buttonpress'},'formula',...
                         {formula{1}, formula{1}});
                     
                     % Model RT in respect to the button press
-                case 'p3_button'
-                    EEG = uf_designmat(EEG,'eventtypes',{'stimulus','button'},'formula',...
-                        {'y~1+cat(trialtype)', formula{1}});
+                case 'p3_button_geiger'
+                    EEG = uf_designmat(EEG,'eventtypes',{'stimOnset','buttonpress'},'formula',...
+                        {'y~1+cat(condition)', formula{1}});
                     
                     % Model RT in respect to Stimulus
-                case 'p3'
-                    EEG = uf_designmat(EEG,'eventtypes',{'stimulus','button'},'formula',...
-                        {formula{1},'y~1+cat(trialtype)'});
+                case 'p3_geiger'
+                    EEG = uf_designmat(EEG,'eventtypes',{'stimOnset','buttonpress'},'formula',...
+                        {formula{1},'y~1+cat(condition)'});
             end
             
             EEG = uf_timeexpandDesignmat(EEG,'timelimits',[-1 1]);
-            EEG = uf_continuousArtifactExclude(EEG,'winrej',winrej);
+            EEG = uf_continuousArtifactExclude(EEG,'winrej',EEG.uf_winrej);
             
             EEG = uf_glmfit(EEG);
             
             EEGe = uf_epoch(EEG,'timelimits',[-1 1]);
-            predictAt = {{'rt',[200 250 300 350 400 450]}};
+            predictAt = {{'response_time',[200 250 300 350 400 450]}};
             EEGe = uf_glmfit_nodc(EEGe,'method','matlab');
             
             ufresult = uf_condense(EEGe);

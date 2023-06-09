@@ -8,6 +8,8 @@ tmp_fn_p3 = {tmp_fn_p3.name};
 fn_p3 = cellfun(@(x)strsplit(x,'_'),tmp_fn_p3,'UniformOutput',false);
 fn_p3 = cell2table(cat(1,fn_p3{:}),'VariableNames',{'sub','formula'});
 
+% Chan of interest, PZ
+chan = 13; 
 
 %fn_p3 = parse_column(fn_p3,'overlap');
 %fn_p3 = parse_column(fn_p3,'noise');
@@ -62,16 +64,16 @@ dataRT = {};
 
 
 % Reaction time NOT modelled
-dataNoRT{1} = fn_p3.beta_nodc(fn_p3.formula=="formula-y~1+cat(trialtype).mat",21,:,1); % Target; no DC
-dataNoRT{2} = fn_p3.beta_nodc(fn_p3.formula=="formula-y~1+cat(trialtype).mat",21,:,8); % Distractor; no DC
-dataNoRT{3} = fn_p3.beta(fn_p3.formula=="formula-y~1+cat(trialtype).mat",21,:,1); % Target; y DC
-dataNoRT{4} = fn_p3.beta(fn_p3.formula=="formula-y~1+cat(trialtype).mat",21,:,8); % Distractor; y DC
+dataNoRT{1} = fn_p3.beta_nodc(fn_p3.formula=="formula-y~1+cat(trialtype).mat",chan,:,1); % Target; no DC
+dataNoRT{2} = fn_p3.beta_nodc(fn_p3.formula=="formula-y~1+cat(trialtype).mat",chan,:,8); % Distractor; no DC
+dataNoRT{3} = fn_p3.beta(fn_p3.formula=="formula-y~1+cat(trialtype).mat",chan,:,1); % Target; y DC
+dataNoRT{4} = fn_p3.beta(fn_p3.formula=="formula-y~1+cat(trialtype).mat",chan,:,8); % Distractor; y DC
 
 % Reaction time modelled
-dataRT{1} = fn_p3.beta_nodc(fn_p3.formula=="formula-y~1+cat(trialtype)+spl(rt,4).mat",21,:,1); % Target; no DC
-dataRT{2} = fn_p3.beta_nodc(fn_p3.formula=="formula-y~1+cat(trialtype)+spl(rt,4).mat",21,:,8); % Distractor; no DC
-dataRT{3} = fn_p3.beta(fn_p3.formula=="formula-y~1+cat(trialtype)+spl(rt,4).mat",21,:,1); % Target; y DC
-dataRT{4} = fn_p3.beta(fn_p3.formula=="formula-y~1+cat(trialtype)+spl(rt,4).mat",21,:,8); % Distractor; y DC
+dataRT{1} = fn_p3.beta_nodc(fn_p3.formula=="formula-y~1+cat(trialtype)+spl(rt,4).mat",chan,:,1); % Target; no DC
+dataRT{2} = fn_p3.beta_nodc(fn_p3.formula=="formula-y~1+cat(trialtype)+spl(rt,4).mat",chan,:,8); % Distractor; no DC
+dataRT{3} = fn_p3.beta(fn_p3.formula=="formula-y~1+cat(trialtype)+spl(rt,4).mat",chan,:,1); % Target; y DC
+dataRT{4} = fn_p3.beta(fn_p3.formula=="formula-y~1+cat(trialtype)+spl(rt,4).mat",chan,:,8); % Distractor; y DC
 
 
 %% Take care of NaN's
@@ -95,7 +97,7 @@ chanNeighbours = ept_ChN2(eLoc);
 times = tmp.ufresult_a.times;
 
 %% TFCE
-cfg = struct('nperm', 1500, 'neighbours', chanNeighbours(21,:));
+cfg = struct('nperm', 1500, 'neighbours', chanNeighbours(chan,:));
 
 % Calculate differences (distractor minus target)
 Data_noDC_noRT = squeeze(dataNoRT{2} - dataNoRT{1}); % No RT modelling + No Overlap correction
@@ -110,7 +112,7 @@ Data_yDC_yRT = squeeze(dataRT{4} - dataRT{3}); % Overlap correction + RT modelle
 % Data_yDC_yRT(any(isnan(Data_yDC_yRT), 2),:) = [];
 
 
-% Results = ept_TFCE(dataNoRT{1}, dataNoRT{2}, eLoc(21), 'rsample', 512, 'chn', chanNeighbours(21,:), 'nperm', 5000, 'flag_save', 0);
+% Results = ept_TFCE(dataNoRT{1}, dataNoRT{2}, eLoc(chan), 'rsample', 512, 'chn', chanNeighbours(chan,:), 'nperm', 5000, 'flag_save', 0);
 disp('**************************************************')
 disp('Classical approach')
 disp('**************************************************')

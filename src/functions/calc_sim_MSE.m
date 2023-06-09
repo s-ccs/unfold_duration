@@ -1,14 +1,17 @@
-function fn = calc_sim_MSE(fn, folder)
+function fn = calc_sim_MSE(fn, folder, csv_flag)
 % Calculates the MSE for simulation results during the Unfold duration
 % project.
 % fn = table
 % folder = string containing simulation instance
+% csv flag = Indicate whether function should look for a result csv file;
+%           Can be 0 or 1; WARNING: If set to 0 and csv file exists it will
+%           be overwritten!!!
 %
 % R.Skukies; 07/09/2021
 
 
 % Check if results for simulation already exist as tabel
-if isfile(['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '_MSE.csv'])
+if isfile(['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '_MSE.csv']) && csv_flag
     disp('Loading data from CSV file. This might take a while...')
     fn = readtable(['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '_MSE.csv']);
     all_b = load(['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_beta_' folder '.mat']);
@@ -68,5 +71,5 @@ else
         fn{r,'normMSE'} = fn{r,'MSE'}/fn{ix_intercept,'MSE'};
         fn{r,'normMSE_nodc'} = fn{r,'MSE_nodc'}/fn{ix_intercept,'MSE'};
     end
-%     writetable(fn(:,[1:10 13:16]),['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '_MSE.csv'])
+    writetable(fn(:,[1:10 13:16]),['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '_MSE.csv'])
 end

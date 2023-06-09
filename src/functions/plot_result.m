@@ -12,7 +12,7 @@ for k = 1:height(fn_small)
         u.beta_nodc = permute(fn_small.beta_nodc(k,:,:,:),[2 3 4 1]);
     end
     [indicatorNames,indicatorCols] = setdiff(fn_small.Properties.VariableNames,["normMSE","formula"]);
-    rem = strcmp(indicatorNames,"beta")| strcmp(indicatorNames,"beta_nodc") | strcmp(indicatorNames,"MSE")| strcmp(indicatorNames,"filename")| strcmp(indicatorNames,"MSE_matlab")| strcmp(indicatorNames,"normMSE_matlab");
+    rem = strcmp(indicatorNames,"beta")| strcmp(indicatorNames,"beta_nodc") | strcmp(indicatorNames,"MSE")| strcmp(indicatorNames,"filename")| strcmp(indicatorNames,"MSE_nodc")| strcmp(indicatorNames,"normMSE_matlab");
     indicatorCols(rem) = [];
     
     if length(u.param) == 1

@@ -13,10 +13,13 @@ folder = 'sim_realNoise_HanningShapes_filtered'; % Change to desired folder;
                    % sim_realNoise_regularize_filtered01 = filtered at 0.1
                    % sim_realNoise_scaledHanning_regularize_filtered =
                    %    scaled Hanning shape only; regularized
-                   % "sim_realNoise_HanningShapes_filtered"= final three
-                   %    shapes used
+                   %
+                   % "sim_realNoise_HanningShapes_filtered"= final three shapes used
+                   % sim_realNoise_HanningShapes
+                   % sim_realNoise_HanningShapes_regularize_filtered
                    % 'sim_realNoise_playground' = various;
-
+                   
+csv_flag = 1; % Indicate if loading should NOT (= 0) look for an existing csv Result/MSE file; overwrites existing CSV results;
 tmp_fn = dir(fullfile('/store/projects/unfold_duration/local',folder, '*.mat'));
 tmp_fn = {tmp_fn.name};
 fn = cellfun(@(x)strsplit(x,'_'),tmp_fn,'UniformOutput',false);
@@ -27,7 +30,7 @@ fn = cell2table(cat(1,fn{:}),'VariableNames',{'shape','overlap','overlapdist','n
 fn.filename = tmp_fn';
 
 %% Load data
-fn = load_sim_data(fn, folder);
+fn = load_sim_data(fn, folder, csv_flag);
 
 %%
 %tmp = load(fullfile('local',folder,fn.filename{1}));
@@ -35,19 +38,34 @@ fn = load_sim_data(fn, folder);
 % ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-2.0.mat" & fn.shape == "box" & fn.noise=="noise-0.00"&fn.overlap=="overlap-1";
 % ix  = fn.shape=="posHalf" & fn.durEffect == "durEffect-1" & fn.iter=="iter-42" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00" & fn.overlap=="overlap-1" & fn.formula ~= "y~1";
 % ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"&fn.overlap=="overlap-0"& fn.formula ~= "y~1";
-ix  = fn.shape=="scaledHanning" & fn.durEffect == "durEffect-1" & fn.iter=="iter-3" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1";
+% ix  = fn.shape=="posHalf" & fn.durEffect == "durEffect-1" & fn.iter=="iter-48" & fn.overlapdist=="halfnormal" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-0" & fn.formula ~= "y~1";
 % ix  = fn.shape=="posNegPos" & fn.durEffect == "durEffect-0" & fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"& fn.overlap=="overlap-1";
+ix  = fn.shape=="scaledHanning" & fn.durEffect == "durEffect-1" & fn.iter=="iter-5" & fn.overlapdist=="halfnormal" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1" & fn.formula ~= "y~1"; % This one was used for the Figure in paper
+
 
 % ix = fn.overlapdist == "uniform" & fn.shape=="posNegPos" & fn.overlapmod == "overlapmod-1.5.mat" & fn.formula == "y~1";
 plot_result(fn(ix,:))
 
 %% Calculate some kind of deviance
 % calculate MSE and Normalize toward y~1
-fn = calc_sim_MSE(fn, folder);
+fn_MSE = calc_sim_MSE(fn, folder, csv_flag);
+
+%% Find best/ worst MSE for given ix
+ix_MSE  = fn_MSE.shape=="scaledHanning" & fn_MSE.durEffect == "durEffect-1" & fn_MSE.overlapdist=="halfnormal" & fn_MSE.overlapmod == "overlapmod-1.5.mat" & fn_MSE.noise=="noise-1.00"& fn_MSE.overlap=="overlap-1" & fn_MSE.formula ~= "theoretical";
+ix_MSE_noDur  = fn_MSE.shape=="scaledHanning" & fn_MSE.durEffect == "durEffect-0" & fn_MSE.overlapdist=="halfnormal" & fn_MSE.overlapmod == "overlapmod-1.5.mat" & fn_MSE.noise=="noise-1.00"& fn_MSE.overlap=="overlap-1" & fn_MSE.formula ~= "theoretical";
+
+min_iter = find(fn_MSE.normMSE == min(fn_MSE.normMSE(ix_MSE,:)));
+max_iter = find(fn_MSE.normMSE == max(fn_MSE.normMSE(ix_MSE,:)));
+min_iter_noDur = find(fn_MSE.normMSE == min(fn_MSE.normMSE(ix_MSE_noDur,:)));
+max_iter_noDur = find(fn_MSE.normMSE == max(fn_MSE.normMSE(ix_MSE_noDur,:)));
+
+%%
+fn_MSE.iter(min_iter_noDur)
+fn_MSE.MSE(min_iter_noDur)
 
 %% Display MSE results
 figure
-fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1",:);
+fn_plot = fn_MSE(fn_MSE.overlapmod=="overlapmod-1.5.mat" & fn_MSE.durEffect == "durEffect-1",:);
 g = gramm('x',fn_plot.shape,'y',fn_plot.normMSE,'color',fn_plot.formula,'marker',fn_plot.shape);
 
 %g.stat_violin('dodge',1,'width',0.3)
@@ -59,7 +77,7 @@ g.axe_property('ylim',[-0.1 1.5])
 g.draw()
 %% Display MSE results (section to change and plot specific results)
 figure
-fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1" & fn.noise=="noise-1.00",:);
+fn_plot = fn_MSE(fn_MSE.shape=="scaledHanning" & fn_MSE.overlapmod=="overlapmod-1.5.mat" & fn_MSE.durEffect == "durEffect-1" & fn_MSE.noise=="noise-1.00"& fn_MSE.overlap=="overlap-1",:);
 g = gramm('x',fn_plot.shape,'y',fn_plot.normMSE_nodc,'color',fn_plot.formula,'marker',fn_plot.shape);
 
 %g.stat_violin('dodge',1,'width',0.3)
@@ -73,11 +91,11 @@ g.draw()
 %% Display MSE mean results with SD (section to change and plot specific results)
 
 figure
-fn_plot = fn(fn.overlapmod=="overlapmod-1.5.mat" & fn.durEffect == "durEffect-1" & fn.noise=="noise-1.00",:);
-g = gramm('x',fn_plot.shape,'y',fn_plot.normMSE,'color',fn_plot.formula,'marker',fn_plot.shape);
+fn_plot = fn_MSE(fn_MSE.shape=="scaledHanning" & fn_MSE.overlapmod=="overlapmod-1.5.mat" & fn_MSE.durEffect == "durEffect-1" & fn_MSE.noise=="noise-1.00"& fn_MSE.overlap=="overlap-1",:);
+g = gramm('x',fn_plot.shape,'y',fn_plot.MSE,'color',fn_plot.formula,'marker',fn_plot.shape);
 
 % g.stat_violin('dodge',1,'width',0.3)
-g.stat_violin('normalization','count','fill','edge');
+g.stat_violin('normalization','count');
 g.stat_boxplot('width',0.15);
 % g.stat_boxplot('dodge',1,'width',0.3)
 % g.stat_summary('dodge',1,'width',0.3, 'type', 'quartile')
@@ -86,7 +104,7 @@ g.stat_boxplot('width',0.15);
 
 g.facet_grid(fn_plot.noise,fn_plot.overlap,'scale','free_y')
 g.fig(fn_plot.overlapdist)
-g.axe_property('ylim',[-0.1 1.5])
+% g.axe_property('ylim',[-0.1 1.5])
 g.draw()
 %% duration distributions
 % 
