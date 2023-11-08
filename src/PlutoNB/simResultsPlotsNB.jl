@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.32
 
 using Markdown
 using InteractiveUtils
@@ -74,10 +74,12 @@ begin
 	subfig = fig[1,2]
 	ag = Axis(subfig, title = "Without OC")
 	plt_nodc = data(filtDF) * visual(BoxPlot) * mapping(:shape, :normMSE_nodc, color=:formula, dodge=:formula)
-	draw!(ag, plt_nodc)
+	test= draw!(ag, plt_nodc)
+	legend!(fig[1, 3], test)
 	#hidedecorations!(ag, ticks = false)
 	ylims!(-0.2, 2.3)
 	hlines!(ag, [0, 1])
+	
 
 	#ag.title = "Without OC"
 	
@@ -107,8 +109,9 @@ begin
 
 	plt2 = data(durationDF) * visual(BoxPlot) * mapping(:shape, :normMSE, color=:formula, dodge=:formula, col = :durEffect)
 
-	draw!(fig2,plt2)
-	ylims!(-0.2, 2.3)
+	d_raw=draw!(fig2,plt2)
+	legend!(fig2[1, 3], d_raw)
+	#ylims!(-0.2, 2.3)
 	#hlines!( [0, 1])
 
 	#hidedecorations!(ax2, ticks = false)
@@ -129,7 +132,7 @@ begin
 	noiseDF = @rsubset(df,
 		:shape == "scaledHanning",
 		:noise =="noise-1.00",
-		:overlap == "overlap-0",
+		:overlap == "overlap-1",
 		:overlapmod == "overlapmod-1.5.mat",
 		#:overlapdist == "halfnormal",
 		#:overlapdist == "uniform",
@@ -146,9 +149,10 @@ begin
 
 	plt3 = data(noiseDF) * visual(BoxPlot) * mapping(:shape, :normMSE, color=:formula, dodge=:formula, col = :overlapdist)
 
-	draw!(fig3,plt3)
-	ylims!(-0.2, 2.3)
-	hlines!(ax3, [0, 1])
+	raw=draw!(fig3[1:2,1:2],plt3)
+	legend!(fig3[1, 3], raw)
+	ylims!(-0.2, 1.6)
+	#hlines!(ax3, [0, 1])
 	hidedecorations!(ax3, ticks = false)
 
 	#hlines!([0, 1])
@@ -158,6 +162,9 @@ begin
 	
 	current_figure()
 end
+
+# ╔═╡ 58229af7-45f9-4830-82b0-3efe11e56e1a
+unique(df.overlapmod)
 
 # ╔═╡ 356dd163-fbad-42fa-b0f1-e94e656cbefe
 if safeFig
@@ -169,9 +176,10 @@ end
 # ╔═╡ 1d953498-ed17-4cc0-8736-5bc912b26be6
 begin
 	# Get different Plots/Layers ready
-	
+	shape = "scaledHanning" # "posHalf" "scaledHanning" "hanning"
+	target = [:normMSE,:normMSE_nodc]
 	plt_wOV = data(@rsubset(df,
-		:shape == "scaledHanning",
+		:shape == shape,
 		:noise =="noise-1.00",
 		:overlap == "overlap-1",
 		:overlapmod == "overlapmod-1.5.mat",
@@ -180,10 +188,10 @@ begin
 		:durEffect == "durEffect-0",
 		:formula != "theoretical",
 		:formula !="y~1",
-	)) * visual(BoxPlot) * mapping(:formula, :normMSE_nodc, color=:formula)
+	)) * visual(BoxPlot) * mapping(:formula, target[2], color=:formula)
 
 	plt_wOC = data(@rsubset(df,
-		:shape == "scaledHanning",
+		:shape == shape,
 		:noise =="noise-1.00",
 		:overlap == "overlap-1",
 		:overlapmod == "overlapmod-1.5.mat",
@@ -192,10 +200,10 @@ begin
 		:durEffect == "durEffect-0",
 		:formula != "theoretical",
 		:formula !="y~1",
-	)) * visual(BoxPlot) * mapping(:formula, :normMSE, color=:formula)
+	)) * visual(BoxPlot) * mapping(:formula, target[1], color=:formula)
 
 	plt_durEF = data(@rsubset(df,
-		:shape == "scaledHanning",
+		:shape == shape,
 		:noise =="noise-1.00",
 		:overlap == "overlap-1",
 		:overlapmod == "overlapmod-1.5.mat",
@@ -203,10 +211,10 @@ begin
 		:durEffect == "durEffect-1",
 		:formula != "theoretical",
 		:formula != "y~1",
-	)) * visual(BoxPlot) * mapping(:formula, :normMSE, color=:formula)
+	)) * visual(BoxPlot) * mapping(:formula, target[1], color=:formula)
 
 	plt_Noise = data(@rsubset(df,
-		:shape == "scaledHanning",
+		:shape == shape,
 		:noise =="noise-1.00",
 		:overlap == "overlap-1",
 		:overlapmod == "overlapmod-1.5.mat",
@@ -215,7 +223,7 @@ begin
 		:durEffect == "durEffect-1",
 		:formula != "theoretical",
 		:formula !="y~1",
-	)) * visual(BoxPlot) * mapping(:formula, :normMSE, color=:formula)
+	)) * visual(BoxPlot) * mapping(:formula, target[1], color=:formula)
 end;
 
 # ╔═╡ b434e3b9-3c80-4d78-860f-685204b9552c
@@ -271,7 +279,7 @@ begin
 			:durEffect == "durEffect-1",
 			:formula != "theoretical",
 			:formula !="y~1",
-	)) * visual(BoxPlot) * mapping(:shape, :normMSE_nodc, color=:formula, dodge=:formula) + data((x=[0.5, 1.5], y=[1, 1])) * visual(Lines) * mapping(:x, :y) + data((x=[0.5, 1.5], y=[0, 0])) * visual(Lines) * mapping(:x, :y)
+	)) * visual(BoxPlot) * mapping(:shape, target[2], color=:formula, dodge=:formula) + data((x=[0.5, 1.5], y=[1, 1])) * visual(Lines) * mapping(:x, :y) + data((x=[0.5, 1.5], y=[0, 0])) * visual(Lines) * mapping(:x, :y)
 
 	plt_NoSimOV = data(@rsubset(df,
 			:shape == "scaledHanning",
@@ -283,11 +291,11 @@ begin
 			:durEffect == "durEffect-0",
 			:formula != "theoretical",
 			:formula !="y~1",
-	)) * visual(BoxPlot) * mapping(:shape, :normMSE_nodc, color=:formula, dodge=:formula) + data((x=[0.5, 1.5], y=[1, 1])) * visual(Lines) * mapping(:x, :y) + data((x=[0.5, 1.5], y=[0, 0])) * visual(Lines) * mapping(:x, :y)
+	)) * visual(BoxPlot) * mapping(:shape, target[2], color=:formula, dodge=:formula) + data((x=[0.5, 1.5], y=[1, 1])) * visual(Lines) * mapping(:x, :y) + data((x=[0.5, 1.5], y=[0, 0])) * visual(Lines) * mapping(:x, :y)
 
 	draw(plt_NoSimOVDur)
 
-	ylims!(-0.2, 2.3)
+	#ylims!(-0.2, 2.3)
 	#save("simResult_AllShapesNoNoise.eps", current_figure())
 	current_figure()
 end
@@ -306,26 +314,26 @@ ax_34 = Axis(fig_3[2,2], title = "OC", xgridvisible = false,
 ax_35 = Axis(fig_3[:,3:4], title = "With OC and duration effect", xgridvisible = false, ygridvisible = false, xticklabelsvisible = false, xticksvisible = false)
 
 	draw!(ax_31, plt_NoSimOV)
-	ylims!(ax_31, (-0.2, 2.3))
+	#ylims!(ax_31, (-0.2, 2.3))
 	#hlines!(ax_31, [0, 1], color = :red)
 	
 	draw!(ax_32, plt_NoSimOVDur)
-	ylims!(ax_32, (-0.2, 2.3))
+	#ylims!(ax_32, (-0.2, 2.3))
 	#hlines!(ax_32, [0, 1], color = :red)
 
 	draw!(ax_33, plt_wOV)
-	ylims!(ax_33, (-0.2, 2.3))
+	#ylims!(ax_33, (-0.2, 2.3))
 	hlines!(ax_33, [0, 1], color = :red)
 	
 	draw!(ax_34, plt_wOC)
-	ylims!(ax_34, (-0.2, 2.3))
+	#ylims!(ax_34, (-0.2, 2.3))
 	hlines!(ax_34, [0, 1], color = :red)
 	
 	grid3 = draw!(ax_35, plt_durEF)
-	ylims!(-0.2, 2.3)
+	#ylims!(-0.2, 2.3)
 	hlines!(ax_35, [0, 1], color = :red)
-	#legend!(fig_3[1,3], grid3)
-
+	#legend!(fig_3[2,3], grid3)
+linkyaxes!([ax_35,ax_34,ax_33,ax_32,ax_31]...)
 fig_3
 end
 
@@ -1752,6 +1760,7 @@ version = "3.5.0+0"
 # ╠═d2a0ac61-1091-4023-b2e9-9e2b2baea233
 # ╠═730b1588-1fe3-4515-8229-a026fb85cfab
 # ╠═4e52b941-0845-4eb5-ae44-4657e9904e35
+# ╠═58229af7-45f9-4830-82b0-3efe11e56e1a
 # ╠═356dd163-fbad-42fa-b0f1-e94e656cbefe
 # ╠═1d953498-ed17-4cc0-8736-5bc912b26be6
 # ╠═87407333-c834-4950-b5db-1ecbb9f3751e
