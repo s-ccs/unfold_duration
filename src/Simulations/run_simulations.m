@@ -9,8 +9,8 @@ emptyEEG.srate = 100; %Hz
 emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 harmonize = 1; % Harmonize shape of Kernel? 1 = Yes; 0 = No
-saveFolder = "sim_realNoise_HanningShapes_filtered"; % Folder to save in
-filter = 0.5;
+saveFolder = "sim_realNoise_HanningShapes_filtered_001"; % Folder to save in; Final used one: sim_realNoise_HanningShapes
+filter = 0.01;
 
 %% Check for regularization (based on folder name)
 if regexp(saveFolder', regexptranslate('wildcard', '**regularize'))
@@ -34,13 +34,13 @@ end
 % Start Parpool 
 % parpool('local', 10)
 %%
-for iter = 1:10 %50
-for durEffect = [0 1]
+for iter = 1:5 %50
+for durEffect = 1 %[0 1]
 for shape = {'hanning', 'posHalf', 'scaledHanning'} % possible {'box','posNeg','posNegPos','hanning', 'posHalf', 'scaledHanning'}
-    for overlap = [0 1]
-        for overlapdistribution ={'uniform','halfnormal'}
+    for overlap = 1 %[0 1]
+        for overlapdistribution = {'halfnormal'} %{'uniform','halfnormal'}
             for noise = noiseIDX
-                for overlapModifier = [1 1.5 2]
+                for overlapModifier = 1.5 %[1 1.5 2]
                     rng(iter) % same seed
                     %% Generate Noise
                     if (genNoise && noise == 1)
