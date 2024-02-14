@@ -1,4 +1,9 @@
 addpath(genpath('src'))
+addpath('lib/eeglab')
+addpath('lib/unfold')
+addpath('lib/gramm')
+addpath(genpath('lib/SEREEGA'))
 addpath('lib/ScientificColourMaps6/')
-run('lib\eeglab\eeglab.m')
-run('lib\unfold\init_unfold.m')
+addpath(genpath('lib/ept_TFCE-matlab'))
+% eeglab;
+init_unfold;

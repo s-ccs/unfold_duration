@@ -1,22 +1,15 @@
 % Run a bunch of simulations (~20GB space if all combinations are used)
-% Use Events from a real dataset for simulation
-
-%% Initilize some stuff
+tic;
 rng(1) % same seed
 ufresult_all = {};
-% N_event = 500; % max number of events
+N_event = 1000; % max number of events
 emptyEEG = eeg_emptyset();
+emptyEEG.srate = 100; %Hz
+emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
+T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 
-% Get Events from real dataset
-EEGN = pop_loadset('filename','7_N170.set','filepath','C:\\Users\\ReneS\\Desktop\\N170_7\\');
-pop_resample(EEGN, 500); % Resample to 500 instead of 1024 for faster computation
-emptyEEG.srate = EEGN.srate;
-emptyEEG.pnts = EEGN.pnts;
-emptyEEG.event.type = extractfield(EEGN.event,'type');
-emptyEEG.event.latency = extractfield(EEGN.event, 'latency');
-T_event   = emptyEEG.srate*1.5;
-%% Run simulations
-for iter = 1%1:50
+
+for iter = 1:50
 for durEffect = [0 1]
 for shape = {'box','posNeg','posNegPos','hanning'}
     for overlap = [0 1]
@@ -25,19 +18,17 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                 for overlapModifier = [1 1.5 2]
                     rng(iter) % same seed
                     %% Simulate data with the given properties
-                    EEG = generate_eegTrueEvents(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,T_event,durEffect);
-                    tmp_T_event = EEG.srate*1.5;
+                    EEG = generate_eeg2events(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event,durEffect);
                     center= quantile([EEG.event.dur],linspace( 1/(10+1), 1-1/(10+1), 10));
                     binEdges = conv([-inf center inf], [0.5, 0.5], 'valid');
                     [~,~,indx] = histcounts([EEG.event.dur],binEdges);
-                    % Maybe check binning later... Bugged for now
-%                     for e = 1:length(EEG.event)
-%                         try
-%                             EEG.event(e).durbin = binEdges(indx(e));
-%                         catch
-%                             EEG.event(e).durbin = [];
-%                         end
-%                     end
+                    k = 1;
+                    for e = 1:length(EEG.event)
+                        if ~isempty(EEG.event(e).dur)
+                            EEG.event(e).durbin = binEdges(indx(k));
+                            k = k + 1;
+                        end
+                    end
                     
                     
                     for formula = {'y~1'
@@ -50,8 +41,8 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                         if formula{1} == "theoretical"
                             % in this case we produce the "ideal" simulation
                             % kernel
-                            assert(length(ufresult_marginal.param) == 11) % make sure we are correct here
-                            durations = [ufresult_marginal.param(2:end).value];
+                            assert(length(ufresult_marginal.param) == 12) % make sure we are correct here; What is supposed to be correct?
+                            durations = [ufresult_marginal.param(2:end-1).value];
                             tmin = sum(ufresult_marginal.times<=0);
                             sig = nan(size(ufresult_marginal.beta));
                             for d = 1:length(durations)
@@ -63,15 +54,15 @@ for shape = {'box','posNeg','posNegPos','hanning'}
                             ufresult_marginal.beta      = sig;
                             ufresult_marginal.beta_nodc = sig;
                         else
-                            ufresult_marginal = fit_unfold(EEG,formula{1},T_event);
+                            ufresult_marginal = fit_unfold(EEG,formula{1},T_event,1);
                         end
                         
                         %% save it
                         filename = sprintf('%s_overlap-%i_%s_noise-%.2f_%s_durEffect-%i_iter-%i_overlapmod-%.1f.mat',shape{1},overlap,overlapdistribution{1},noise,formula{1},durEffect,iter,overlapModifier);
-                        if ~exist(fullfile('local','sim3'),'dir')
-                            mkdir(fullfile('local','sim3'))
+                        if ~exist(fullfile('local','sim2-1'),'dir')
+                            mkdir(fullfile('local','sim2-1'))
                         end
-                        save(fullfile('local','sim3',filename),'ufresult_marginal')
+                        save(fullfile('local','sim2-1',filename),'ufresult_marginal')
                     end
                     
                 end
@@ -81,3 +72,4 @@ for shape = {'box','posNeg','posNegPos','hanning'}
 end
 end
 end
+toc

@@ -4,3 +4,12 @@
 [submodule "lib/eeglab"]
 	path = lib/eeglab
 	url = https://github.com/sccn/eeglab
+[submodule "lib/ept_TFCE-matlab"]
+	path = lib/ept_TFCE-matlab
+	url = https://github.com/Mensen/ept_TFCE-matlab.git
+[submodule "SEREEGA"]
+	path = SEREEGA
+	url = https://github.com/lrkrol/SEREEGA.git
+[submodule "lib/gramm"]
+	path = lib/gramm
+	url = https://github.com/piermorel/gramm

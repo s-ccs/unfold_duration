@@ -70,7 +70,7 @@ for e = 1:length(event_lat(1:end-1))
         % Generate event A
         sig1 = generate_signal_kernel(sigduration,options.shape,EEG.srate);
         start = find(sig1~=0,1);
-        EEG.event(e).dur = dur./EEG.srate;
+        EEG.event(e).dur = dur./EEG.srate; % Convert duration to ms
         EEG.event(e).sigdur = (find(sig1(start:end)==0,1)+start)./EEG.srate;
     else
         % Generate eventB
