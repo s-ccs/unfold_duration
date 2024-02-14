@@ -88,17 +88,16 @@ end
 
 # ╔═╡ 730b1588-1fe3-4515-8229-a026fb85cfab
 begin
-	# Do we need overlap correction? -> YES!
-	# No duration effect, from here on onward always with overlap correction
+	# Compare estimations of different shapes
 	
 	durationDF = @rsubset(df,
 		:noise =="noise-0.00",
 		:overlap == "overlap-1",
 		:overlapmod == "overlapmod-1.5.mat",
 		:overlapdist == "halfnormal",
-		#:durEffect == "durEffect-1",
+		:durEffect == "durEffect-1",
 		:formula != "theoretical",
-		#:formula != "y~1",
+		:formula != "y~1",
 	)
 
 	#resolution = (1200, 600)
@@ -110,7 +109,7 @@ begin
 	plt2 = data(durationDF) * visual(BoxPlot) * mapping(:shape, :normMSE, color=:formula, dodge=:formula, col = :durEffect)
 
 	d_raw=draw!(fig2,plt2)
-	legend!(fig2[1, 3], d_raw)
+	legend!(fig2[1, 2], d_raw)
 	#ylims!(-0.2, 2.3)
 	#hlines!( [0, 1])
 
@@ -126,11 +125,10 @@ end
 
 # ╔═╡ 4e52b941-0845-4eb5-ae44-4657e9904e35
 begin
-	# Do we need overlap correction? -> YES!
-	# No duration effect, from here on onward always with overlap correction
+	# compare both overlapmod and distribution
 	
 	noiseDF = @rsubset(df,
-		:shape == "scaledHanning",
+		#:shape == "scaledHanning",
 		:noise =="noise-1.00",
 		:overlap == "overlap-1",
 		:overlapmod == "overlapmod-1.5.mat",
@@ -143,28 +141,28 @@ begin
 
 	#resolution = (1200, 600)
 	fig3 = Figure(; resolution)
-	ax3 = Axis(fig3[1, 1])
+	#ax3 = Axis(fig3)
 	
 	#plt = data(filtDF) * visual(Violin) * mapping(:shape, :normMSE, color=:formula, dodge=:formula)
 
-	plt3 = data(noiseDF) * visual(BoxPlot) * mapping(:shape, :normMSE, color=:formula, dodge=:formula, col = :overlapdist)
+	plt3 = data(noiseDF) * visual(BoxPlot) * mapping(:formula, :normMSE, color=:formula, dodge = :overlapdist , col = :shape)
 
-	raw=draw!(fig3[1:2,1:2],plt3)
-	legend!(fig3[1, 3], raw)
-	ylims!(-0.2, 1.6)
-	#hlines!(ax3, [0, 1])
-	hidedecorations!(ax3, ticks = false)
+	raw=draw!(fig3,plt3)
+	legend!(fig3[1, end+1], raw)
+	for i = 1:3; hlines!(raw[i].axis, [0, 1]); end
+	ylims!(-0.2, 2.3)
+	#hidedecorations!(ax3, ticks = false)
 
 	#hlines!([0, 1])
 
 
 	#ag.title = "Without OC"
-	
+	#linkyaxes!(ax3)
 	current_figure()
 end
 
 # ╔═╡ 58229af7-45f9-4830-82b0-3efe11e56e1a
-unique(df.overlapmod)
+raw[1].axis
 
 # ╔═╡ 356dd163-fbad-42fa-b0f1-e94e656cbefe
 if safeFig
@@ -291,7 +289,7 @@ begin
 			:durEffect == "durEffect-0",
 			:formula != "theoretical",
 			:formula !="y~1",
-	)) * visual(BoxPlot) * mapping(:shape, target[2], color=:formula, dodge=:formula) + data((x=[0.5, 1.5], y=[1, 1])) * visual(Lines) * mapping(:x, :y) + data((x=[0.5, 1.5], y=[0, 0])) * visual(Lines) * mapping(:x, :y)
+	)) * visual(BoxPlot) * mapping(:shape, target[2], color=:formula, dodge=:formula)
 
 	draw(plt_NoSimOVDur)
 
@@ -315,7 +313,7 @@ ax_35 = Axis(fig_3[:,3:4], title = "With OC and duration effect", xgridvisible =
 
 	draw!(ax_31, plt_NoSimOV)
 	#ylims!(ax_31, (-0.2, 2.3))
-	#hlines!(ax_31, [0, 1], color = :red)
+	hlines!(ax_31, [1], color = :red)
 	
 	draw!(ax_32, plt_NoSimOVDur)
 	#ylims!(ax_32, (-0.2, 2.3))
@@ -323,16 +321,17 @@ ax_35 = Axis(fig_3[:,3:4], title = "With OC and duration effect", xgridvisible =
 
 	draw!(ax_33, plt_wOV)
 	#ylims!(ax_33, (-0.2, 2.3))
-	hlines!(ax_33, [0, 1], color = :red)
+	hlines!(ax_33, [1], color = :red)
 	
 	draw!(ax_34, plt_wOC)
 	#ylims!(ax_34, (-0.2, 2.3))
-	hlines!(ax_34, [0, 1], color = :red)
+	hlines!(ax_34, [1], color = :red)
 	
 	grid3 = draw!(ax_35, plt_durEF)
 	#ylims!(-0.2, 2.3)
-	hlines!(ax_35, [0, 1], color = :red)
+	hlines!(ax_35, [1], color = :red)
 	#legend!(fig_3[2,3], grid3)
+	
 linkyaxes!([ax_35,ax_34,ax_33,ax_32,ax_31]...)
 fig_3
 end
