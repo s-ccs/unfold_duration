@@ -10,6 +10,7 @@ function fn = load_sim_data(fn, folder, csv_flag, jump_shape)
 %
 % R.Skukies; 07/09/2021
 
+points = 250; % Depends on the used window; 250 correspons to -0.5 to 2 sec (used in final results), 300 is for sanity check with longer (-1 to 2sec) window
 
 % Check if results for simulation already exist as tabel
 if isfile(['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '.csv']) && csv_flag
@@ -27,16 +28,16 @@ if isfile(['/store/projects/unfold_duration/local/simulationResults/' folder '/s
 % Otherwise load results from .mat files
 else
     if (regexp(folder, regexptranslate('wildcard', '**HanningShapes')))
-        all_b = nan(height(fn),1,250,16); % size based on dataset used: sim/sim/_harm (1,250,11); sim2 (1,250,12)
-        all_bnodc = nan(height(fn),1,250,16);
+        all_b = nan(height(fn),1,points,16); % size based on dataset used: sim/sim/_harm (1,250,11); sim2 (1,250,12)
+        all_bnodc = nan(height(fn),1,points,16);
         num_flag = 2;
     elseif any(strcmp({'sim', 'sim_regularize'}, folder)) || (regexp(folder, regexptranslate('wildcard', '**realNoise')))
-        all_b = nan(height(fn),1,250,11); % size based on dataset used: sim/sim/_harm (1,250,11); sim2 (1,250,12)
-        all_bnodc = nan(height(fn),1,250,11);
+        all_b = nan(height(fn),1,points,11); % size based on dataset used: sim/sim/_harm (1,250,11); sim2 (1,250,12)
+        all_bnodc = nan(height(fn),1,points,11);
         num_flag = 1;
     else
-        all_b = nan(height(fn),1,250,12);
-        all_bnodc = nan(height(fn),1,250,12);
+        all_b = nan(height(fn),1,points,12);
+        all_bnodc = nan(height(fn),1,points,12);
         num_flag = 0;
     end
     

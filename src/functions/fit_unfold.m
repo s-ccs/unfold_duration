@@ -19,7 +19,7 @@ end
 
 %     fun = 'splines';
 cfgTimeexpand = struct();
-cfgTimeexpand.timelimits = [-.5 2];
+cfgTimeexpand.timelimits = [-0.5 2]; % final: -0.5 to 2
 
 EEG = uf_timeexpandDesignmat(EEG,cfgTimeexpand);
 % end

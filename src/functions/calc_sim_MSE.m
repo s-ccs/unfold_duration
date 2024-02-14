@@ -52,8 +52,8 @@ else
         y_true(isnan(y_true(:))) = 0;
         y_est(isnan(y_est(:))) = 0; % can happen in case of theoretical
         y_est_nodc(isnan(y_est_nodc(:))) = 0;
-        dev = sum((y_true(:) - y_est(:)).^2);
-        dev_nodc = sum((y_true(:) - y_est_nodc(:)).^2);
+        dev = mean((y_true(:) - y_est(:)).^2., "all");%mse(y_true, y_est_nodc); %sum((y_true(:) - y_est(:)).^2);
+        dev_nodc = mean((y_true(:) - y_est_nodc(:)).^2, "all");%mse(y_true, y_est_nodc); %sum((y_true(:) - y_est_nodc(:)).^2);
         fn{r,'MSE'} = dev;
         fn{r,'MSE_nodc'} = dev_nodc;
     end
@@ -71,5 +71,5 @@ else
         fn{r,'normMSE'} = fn{r,'MSE'}/fn{ix_intercept,'MSE'};
         fn{r,'normMSE_nodc'} = fn{r,'MSE_nodc'}/fn{ix_intercept,'MSE'};
     end
-    writetable(fn(:,[1:10 13:16]),['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '_MSE.csv'])
+    writetable(fn(:,[1:10 13:16]),['/store/projects/unfold_duration/local/simulationResults/' folder '/20240214simulationResults_' folder '_MSE.csv'])
 end

@@ -40,7 +40,7 @@ fn = load_sim_data(fn, folder, csv_flag);
 % ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"&fn.overlap=="overlap-0"& fn.formula ~= "y~1";
 % ix  = fn.shape=="posHalf" & fn.durEffect == "durEffect-1" & fn.iter=="iter-48" & fn.overlapdist=="halfnormal" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-0" & fn.formula ~= "y~1";
 % ix  = fn.shape=="posNegPos" & fn.durEffect == "durEffect-0" & fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"& fn.overlap=="overlap-1";
-ix  = fn.shape=="scaledHanning" & fn.durEffect == "durEffect-1" & fn.iter=="iter-5" & fn.overlapdist=="halfnormal" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1" & fn.formula ~= "y~1"; % This one was used for the Figure in paper
+ix  = fn.shape=="scaledHanning" & fn.durEffect == "durEffect-0" & fn.iter=="iter-5" & fn.overlapdist=="halfnormal" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1" & fn.formula ~= "y~1"; % This one was used for the Figure in paper
 
 
 % ix = fn.overlapdist == "uniform" & fn.shape=="posNegPos" & fn.overlapmod == "overlapmod-1.5.mat" & fn.formula == "y~1";
@@ -65,7 +65,7 @@ fn_MSE.MSE(min_iter_noDur)
 
 %% Display MSE results
 figure
-fn_plot = fn_MSE(fn_MSE.overlapmod=="overlapmod-1.5.mat" & fn_MSE.durEffect == "durEffect-1",:);
+fn_plot = fn_MSE;
 g = gramm('x',fn_plot.shape,'y',fn_plot.normMSE,'color',fn_plot.formula,'marker',fn_plot.shape);
 
 %g.stat_violin('dodge',1,'width',0.3)
@@ -73,7 +73,7 @@ g.geom_jitter('dodge',1);
 %g.geom_line()
 g.facet_grid(fn_plot.noise,fn_plot.overlap,'scale','free_y')
 g.fig(fn_plot.overlapdist)
-g.axe_property('ylim',[-0.1 1.5])
+%g.axe_property('ylim',[-0.1 1.5])
 g.draw()
 %% Display MSE results (section to change and plot specific results)
 figure
@@ -91,7 +91,7 @@ g.draw()
 %% Display MSE mean results with SD (section to change and plot specific results)
 
 figure
-fn_plot = fn_MSE(fn_MSE.shape=="scaledHanning" & fn_MSE.overlapmod=="overlapmod-1.5.mat" & fn_MSE.durEffect == "durEffect-1" & fn_MSE.noise=="noise-1.00"& fn_MSE.overlap=="overlap-1",:);
+fn_plot = fn_MSE(fn_MSE.overlapmod=="overlapmod-1.5.mat" & fn_MSE.durEffect == "durEffect-1" & fn_MSE.noise=="noise-1.00"& fn_MSE.overlap=="overlap-1",:);
 g = gramm('x',fn_plot.shape,'y',fn_plot.MSE,'color',fn_plot.formula,'marker',fn_plot.shape);
 
 % g.stat_violin('dodge',1,'width',0.3)
