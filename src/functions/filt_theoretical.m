@@ -17,6 +17,7 @@ sigEEG = eeg_emptyset();
 sigEEG.srate = 100; %Hz
 sigEEG.pnts  = length(sig);
 sigEEG.data = sig;
+sigEEG = eeg_checkset(sigEEG);
 
 % Filter
 sigEEG = pop_eegfiltnew(sigEEG,filter,[]);
