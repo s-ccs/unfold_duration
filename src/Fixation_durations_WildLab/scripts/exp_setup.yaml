@@ -1,0 +1,14 @@
+# Experimental setup specifications
+
+# Screen resolution in pixels (width, height)
+screen_res_px: [3840, 2160]
+
+# Screen size in mm (width, height)
+# Source: https://www.asus.com/de/displays-desktops/monitors/proart/proart-display-pa328q/techspec/
+screen_size_mm: [708.48, 398.52]
+
+# Image resolution in pixels (width, height)
+original_image_size_px: [2305, 1298]
+
+# Subjects' distance from the monitor in mm
+distance_mm: 800
