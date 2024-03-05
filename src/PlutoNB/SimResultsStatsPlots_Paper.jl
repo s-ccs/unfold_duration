@@ -17,8 +17,8 @@ end
 # ╔═╡ 7cba973b-70d9-4543-8cb3-58675379baa6
 begin
 	# Load data
-	folder = "sim_realNoise_HanningShapes_filtered"
-	fpath = joinpath("/store/projects/unfold_duration/local/simulationResults/", folder, "20240214simulationResults_" * folder * "_MSE.csv")
+	folder = "20240227_sim_realNoise_HanningShapes_filtered"
+	fpath = joinpath("/store/projects/unfold_duration/local/simulationResults/", folder, "simulationResults_" * folder * "_MSE.csv")
 	
 	df = CSV.read(fpath, DataFrame)
 
@@ -677,16 +677,10 @@ begin
 	hidedecorations!(axLegend2, label = false)
 	hidespines!(axLegend2, :r, :t, :l)
 	
-	#CairoMakie.save("20240122ShapeDistributionEffect.eps", figShape)
+	#CairoMakie.save("20240301ShapeDistributionEffect.eps", figShape)
 	
 	current_figure()
 end
-
-# ╔═╡ 54273739-a08a-49c8-a963-84f863734779
-axShape1.ylabelvisible[]
-
-# ╔═╡ 4a8a0a63-613f-43a4-9fa7-849355fd352d
-
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2543,7 +2537,5 @@ version = "3.5.0+0"
 # ╟─acc1d345-4a6f-4250-b021-d8ce7612eb80
 # ╠═183f78ee-6fe9-4881-9427-376c8dbcf288
 # ╠═2b0924b3-cb1a-47d0-9b8a-d10f7ec0c58c
-# ╠═54273739-a08a-49c8-a963-84f863734779
-# ╠═4a8a0a63-613f-43a4-9fa7-849355fd352d
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

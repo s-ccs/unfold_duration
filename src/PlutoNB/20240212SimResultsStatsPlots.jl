@@ -17,7 +17,7 @@ end
 # ╔═╡ 481dee71-50da-40c6-9521-8beee9c45a35
 begin
 	# Load data
-	folder = "sim_realNoise_HanningShapes_filtered"
+	folder = "20240227_sim_realNoise_HanningShapes_filtered"
 	fpath = joinpath("/store/projects/unfold_duration/local/simulationResults/", folder, "simulationResults_" * folder * "_MSE.csv")
 	
 	df = CSV.read(fpath, DataFrame)
@@ -124,8 +124,8 @@ begin
 		ygridvisible = false, 
 		xticklabelsvisible = false, 
 		yticksvisible = ytickvis, 
-		xticksvisible = false, 
-		yticks=(tickpos, [ticklabels[1],ticklabels[2],ticklabels[3]]), yticklabelsize=ticksize)
+		xticksvisible = false,
+		yticks=(tickpos, ["0","1",ticklabels[3]]), yticklabelsize=ticksize)
 
 	# Panel B
 	ax_2x2_2 = Axis(fig_2x2[rows[2]...,cols[1]...], xgridvisible = false,
@@ -133,7 +133,7 @@ begin
 			yticksvisible = ytickvis, 
 			xticklabelsvisible = false, 
 			xticksvisible = false, 
-			yticks=(tickpos, [ticklabels[1],ticklabels[2],ticklabels[4]]), yticklabelsize=ticksize)
+			yticks=(tickpos, ["0","1",ticklabels[4]]), yticklabelsize=ticksize)
 
 
 	# Panel C
@@ -162,7 +162,7 @@ begin
 	spines = (:r,:t)
 	xline_color = :black
 	
-	# Draw legend panel 1
+	#= Draw legend panel 1
 	ax_l1 = Axis(fig_2x2[1:2,1], 
 		xgridvisible = false,
         xticklabelsvisible = false,
@@ -179,7 +179,7 @@ begin
 	hidespines!(ax_l1, spines...)
 	#ylims!(ax_31, (-0.2, 2.3))
 	hlines!(ax_l1, [1], color = xline_color)
-
+	=#
 	# ---
 	all_ax = [ax_2x2_1, ax_2x2_2, ax_2x2_3, ax_2x2_4]
 	all_plt = [plt_NoSimOVDur, plt_NoSimOV, plt_durEF, plt_wOC]
@@ -190,7 +190,8 @@ begin
 		hlines!(ax, [1], color = xline_color)
 	end
 
-	linkyaxes!(cat(all_ax, ax_l1; dims=1)...)
+	#linkyaxes!(cat(all_ax, ax_l1; dims=1)...)
+	linkyaxes!(all_ax...)
 	fig_2x2
 end
 
@@ -243,7 +244,7 @@ end
 
 # ╔═╡ 873a3efd-093b-4c2f-a25d-c1abc2d79d73
 begin
-	# Draw legend panel 1
+	#= Draw legend panel 1
 	
 	ax_l1_2 = Axis(fig_2x2[1:2,1], width=Relative(1), height=Relative(0.15), halign=0.0, valign=0.,limits=((0,5),(-0.5,0.5)))
     hidespines!(ax_l1_2)
@@ -259,14 +260,14 @@ begin
 	#linkyaxes!([ax_35,ax_34,ax_33,ax_32,ax_31, ax_l1]...)
 
 	#Label(fig_3[1,1])
-	
+	=#
 	fig_2x2
 	
 end
 
 # ╔═╡ 93821d3a-aeda-4e91-b3f3-2a1cc696ab18
 begin
-	# Draw legend panel 2
+	#= Draw legend panel 2
 	ax_l2 = Axis(fig_2x2[3:4,1], xgridvisible = false,
         ygridvisible = false, 
 		xticklabelsvisible = false,
@@ -291,10 +292,12 @@ begin
 		#text="no overlap\nsimulated and/or\n analyzed")
 	#CairoMakie.save("20240122ResultsFigure.eps", fig_3)
 	fig_2x2
+	=#
 end
 
 # ╔═╡ b9fc1699-b7a3-43f0-8a99-d2a2d488855b
 begin
+	#=
 	ms = 40
 	axLegend2 = Axis(fig_2x2[5:6,1],
 		yticksvisible = false,
@@ -310,70 +313,10 @@ begin
     scatter!(axLegend2,7.0,2.5,marker=get_unfold_svg("10spl"),markersize=ms)
     scatter!(axLegend2,2.0,2.5,marker=get_unfold_svg("5spl"),markersize=ms)
 
-	#CairoMakie.save("20240213ShapeMSEResuts2x2.eps", fig_2x2)
-	
+	=#
+	#CairoMakie.save("20240301ShapeMSEResuts2x2.eps", fig_2x2)
 	fig_2x2
 end
-
-# ╔═╡ 853e2b0e-8bfc-4243-b3d3-a66044876b2f
-#=
-	#ag.title = "Without OC"
-	axShape3.ylabel = "normalized model performance [MSE]"
-	linkyaxes!(allax...)
-
-	# Yticks
-	#axShape1.yticks[] = ([0,1,2.2], ["","","B"])
-	#axShape2.yticks[] = ([0,1,2.2], ["","","A"])
-	axShape3.yticks[] = (tickpos_tmp, ["0","1","A"])
-	#yticks!(axShape1, tickpos, [ticklabels[1:3]...])
-
-	## Legend 1
-	axLegend1 = Axis(figShape[3,1],
-		yticksvisible = false,
-		yticklabelsvisible = false,
-		xlabel = "y-axis interpretation",
-		ylabel = "Legend",
-		xticklabelsvisible = false)
-	
-	pltL = data(@rsubset(noiseDF, :shape == shapes[end])) * visual(BoxPlot) * mapping(:formula=>sorter(sorting...), :normMSE, color=:formula, dodge = :overlapdist)
-	
-	draw!(axLegend1,pltL)
-	hlines!(axLegend1, [1],color= xline_color)
-	ylims!(-0.2, 2.0)
-	hidedecorations!(axLegend1, label = false)
-	hidespines!(axLegend1, :r, :t)
-	
-	## Legend 2
-	ms = 70
-	axLegend2 = Axis(figShape[3,2],
-		yticksvisible = false,
-		yticklabelsvisible = false,
-		xlabel = " colors",
-		xticklabelsvisible = false,
-		limits=((0,10),(0,10)))
-	hidedecorations!(axLegend2, label = false)
-	hidespines!(axLegend2, :r, :l, :t)
-	scatter!(axLegend2,2.0,7.5,marker=get_unfold_svg("linear"),markersize=ms)
-    scatter!(axLegend2,7.0,7.5,marker=get_unfold_svg("cat"),markersize=ms)
-
-    scatter!(axLegend2,7.0,2.5,marker=get_unfold_svg("10spl"),markersize=ms)
-    scatter!(axLegend2,2.0,2.5,marker=get_unfold_svg("5spl"),markersize=ms)
-
-	## Legend
-	ms = 70
-	axLegend2 = Axis(figShape[3,3],
-		yticksvisible = false,
-		yticklabelsvisible = false,
-		xlabel = "color pairs/ distributions",
-		xticklabelsvisible = false,
-		limits=((0,10),(0,10)))
-	hidedecorations!(axLegend2, label = false)
-	hidespines!(axLegend2, :r, :t, :l)
-	
-	#CairoMakie.save("20240213ShapeMSEResuts2x2.eps", figShape)
-	
-	current_figure()
-end =#
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2224,6 +2167,5 @@ version = "3.5.0+0"
 # ╠═873a3efd-093b-4c2f-a25d-c1abc2d79d73
 # ╠═93821d3a-aeda-4e91-b3f3-2a1cc696ab18
 # ╠═b9fc1699-b7a3-43f0-8a99-d2a2d488855b
-# ╠═853e2b0e-8bfc-4243-b3d3-a66044876b2f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

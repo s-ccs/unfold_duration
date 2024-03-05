@@ -71,5 +71,5 @@ else
         fn{r,'normMSE'} = fn{r,'MSE'}/fn{ix_intercept,'MSE'};
         fn{r,'normMSE_nodc'} = fn{r,'MSE_nodc'}/fn{ix_intercept,'MSE'};
     end
-    writetable(fn(:,[1:10 13:16]),['/store/projects/unfold_duration/local/simulationResults/' folder '/20240214simulationResults_' folder '_MSE.csv'])
+    writetable(fn(:,[1:10 13:16]),['/store/projects/unfold_duration/local/simulationResults/' folder '/simulationResults_' folder '_MSE.csv'])
 end

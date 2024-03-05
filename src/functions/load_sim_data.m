@@ -73,13 +73,16 @@ else
         end
         
         if strcmp(fn{r,'formula'},'y~1+cat(durbin)')
-            b(:,:,2:end+1) = b(:,:,1:end);
-            b_nodc(:,:,2:end+1) = b_nodc(:,:,1:end);
             
             % When incoherent number of number of parameters preset extent
             % based on values from tmp_theo
             if num_flag == 2
                 [b, b_nodc] = extend_bin(fn, tmp, folder, b, b_nodc, r);
+            else
+                % This was the old extension when there were only 10
+                % splines used
+                b(:,:,2:end+1) = b(:,:,1:end);
+                b_nodc(:,:,2:end+1) = b_nodc(:,:,1:end);
             end
             
         end

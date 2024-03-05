@@ -20,6 +20,7 @@ sigEEG.data = sig;
 sigEEG = eeg_checkset(sigEEG);
 
 % Filter
+sigEEG.data(isnan(sigEEG.data(:))) = 0;
 sigEEG = pop_eegfiltnew(sigEEG,filter,[]);
 
 % Get back original signal length

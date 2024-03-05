@@ -22,6 +22,13 @@ tmp_theo(1) = []; % First one is NAN because of intercept
 bin_param = extractfield(tmp.ufresult_marginal.param, "name");
 bin_param = bin_param(2:end);
 
+% Init new beta matrices
+b_tmp = zeros(size(b));
+b_nodc_tmp = zeros(size(b_nodc));
+% Set first parameter because of intercept & delete intercept
+b_tmp(:,:,1) = b(:,:,1);
+b_nodc_tmp(:,:,1) = b_nodc(:,:,1);
+
 for i = 1:length(bin_param)
     
     % Find Value of current bin
@@ -36,8 +43,8 @@ for i = 1:length(bin_param)
     end
     
     % repeat the value of the bin to match length
-    b(:,:,tmp_ix+1) = repmat(b(:,:,i+1), 1, 1, length(tmp_ix));
-    b_nodc(:,:,tmp_ix+1) = repmat(b_nodc(:,:,i+1), 1, 1, length(tmp_ix));
+    b_tmp(:,:,tmp_ix+1) = repmat(b(:,:,i+1), 1, 1, length(tmp_ix));
+    b_nodc_tmp(:,:,tmp_ix+1) = repmat(b_nodc(:,:,i+1), 1, 1, length(tmp_ix));
     
     old_value = tmp_value;
     
@@ -45,7 +52,10 @@ end
 
 % Add entries for values greater than the last bin
 tmp_ix = find(tmp_theo > tmp_value);
-b(:,:,tmp_ix+1) = repmat(b(:,:,end), 1, 1, length(tmp_ix));
-b_nodc(:,:,tmp_ix+1) = repmat(b_nodc(:,:,end), 1, 1, length(tmp_ix));
+b_tmp(:,:,tmp_ix+1) = repmat(b(:,:,end), 1, 1, length(tmp_ix));
+b_nodc_tmp(:,:,tmp_ix+1) = repmat(b_nodc(:,:,end), 1, 1, length(tmp_ix));
+
+b = b_tmp;
+b_nodc = b_nodc_tmp;
 
 return
