@@ -4,6 +4,7 @@ using DrWatson
 
 # Import required packages
 using PyMNE
+
 using Unfold
 using CSV
 using DataFrames
@@ -65,8 +66,9 @@ end
 cleaned_events = filter(:event_nr => event -> event ∉ events_to_remove.event_nr, events)
 
 # Find the corresponding start and end for all events that have to be removed
-data_to_delete = [events_to_remove.latency_rounded .+ bf_fixation.shiftOnset (
-    events_to_remove.latency_rounded .+ bf_fixation.shiftOnset .+ length(bf_fixation.times)
+data_to_delete = [events_to_remove.latency_rounded .+ bf_fixation.shift_onset (
+    events_to_remove.latency_rounded .+ bf_fixation.shift_onset .+
+    length(bf_fixation.times)
 )]
 
 # Set the corresponding EEG data to missing
