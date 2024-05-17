@@ -1942,9 +1942,9 @@ version = "1.0.2"
 
 [[deps.Unfold]]
 deps = ["DSP", "DataFrames", "Distributions", "DocStringExtensions", "Effects", "FileIO", "GLM", "IterativeSolvers", "JLD2", "LinearAlgebra", "Logging", "MLBase", "Missings", "OrderedCollections", "PooledArrays", "ProgressMeter", "Random", "SimpleTraits", "SparseArrays", "StaticArrays", "Statistics", "StatsBase", "StatsFuns", "StatsModels", "Tables", "Term", "TimerOutputs", "TypedTables"]
-git-tree-sha1 = "c27ce832ac4d67c7cb49cf589650722f150f0e3f"
+git-tree-sha1 = "cdbfeef5c4e2fbf3e8be719ac999b6c1dd118d90"
 uuid = "181c99d8-e21b-4ff3-b70b-c233eddec679"
-version = "0.7.1"
+version = "0.7.2"
 
     [deps.Unfold.extensions]
     UnfoldBSplineKitExt = "BSplineKit"

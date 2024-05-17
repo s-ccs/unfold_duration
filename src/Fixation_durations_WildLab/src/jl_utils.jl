@@ -231,7 +231,7 @@ function fit_Unfold_model(
         )
         m = fit(
             UnfoldModel,
-            Dict("fixation" => (f_fixation, times), "stimulus" => (f_stimulus, times)),
+            ["fixation" => (f_fixation, times), "stimulus" => (f_stimulus, times)],
             events,
             data_epochs,
             eventcolumn = "type",
