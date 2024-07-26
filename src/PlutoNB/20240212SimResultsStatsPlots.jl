@@ -17,7 +17,7 @@ end
 # ╔═╡ 481dee71-50da-40c6-9521-8beee9c45a35
 begin
 	# Load data
-	folder = "20240227_sim_realNoise_HanningShapes_filtered"
+	folder = "20240508_sim_realNoise_HanningShapes_filtered_blockdesign"
 	fpath = joinpath("/store/projects/unfold_duration/local/simulationResults/", folder, "simulationResults_" * folder * "_MSE.csv")
 	
 	df = CSV.read(fpath, DataFrame)
@@ -109,7 +109,7 @@ end;
 
 # ╔═╡ 41517d69-4973-4b40-bc97-9fcf42c8dd27
 begin
-	tickpos=[0, 1, 2.2]
+	tickpos=[0, 1, 1.8]
 	ticklabels = ["", "", "A","B","C","D","E"]
 	ticksize= 21
 	ytickvis = true
@@ -2163,7 +2163,7 @@ version = "3.5.0+0"
 # ╠═1f7f7bb5-f65f-4849-bb12-329aa798b27e
 # ╠═41517d69-4973-4b40-bc97-9fcf42c8dd27
 # ╠═0ca221a4-b486-4671-b868-e13066aa324d
-# ╟─e6f51bea-71ee-4899-b991-af22bebb071e
+# ╠═e6f51bea-71ee-4899-b991-af22bebb071e
 # ╠═873a3efd-093b-4c2f-a25d-c1abc2d79d73
 # ╠═93821d3a-aeda-4e91-b3f3-2a1cc696ab18
 # ╠═b9fc1699-b7a3-43f0-8a99-d2a2d488855b
