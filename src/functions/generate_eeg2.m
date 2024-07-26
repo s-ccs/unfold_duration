@@ -1,8 +1,7 @@
-function EEG = generate_eeg(EEG,shape,overlap,overlapdistribution,noise,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise, N, signal_strength, blockdesign)
+function EEG = generate_eeg2(EEG,shape,overlap,overlapdistribution,noise,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise, N)
 
 options = struct();
 options.overlap = overlap; % 0 deactivates overlap
-options.blockdesign = blockdesign; % 1 activates blockdesign overlap
 options.shape = shape;
 options.noise = noise;
 options.overlapdistribution = overlapdistribution;
@@ -24,6 +23,9 @@ event_lat = ceil(event_lat * EEG.srate); % convert to samples
 event_lat(event_lat>T_event) = [];
 event_lat = cumsum(event_lat);
 event_lat(event_lat>EEG.pnts-T_event) = []; % limit the signalsize
+
+% Technically this adds a -50/50ms jitter 
+% event_lat = event_lat + round((rand(length(event_lat), 1) - 0.5) ./ 10 .* EEG.srate);
 
 for e = 1:length(event_lat)
     EEG.event(e).latency = event_lat(e);
@@ -51,12 +53,15 @@ sig1_tmp = zeros(1,EEG.pnts);
 sigAll = zeros(length(event_lat)-1,T_event);
 for e = 1:length(event_lat(1:end-1))
     evt1 = EEG.event(e).latency;
-%     evt2 = event_lat(e + 1);
-%     dur = evt2-evt1;
-    dur = dur_all(e);
+    evt2 = event_lat(e + 1);
+    dur = evt2-evt1;
+    jitter = round((rand(1) - 0.5) ./ 10 .* EEG.srate);
+    dur = dur + jitter; % Discuss
+%     with Bene where to add jitter...
     
     % Decide on scaling factor here; Use linspace variable from above
-    tmp_scale_factor = scale_factors(dur == sorted_dur);
+%     tmp_scale_factor = scale_factors(dur == sorted_dur);
+    tmp_scale_factor = scale_factors(dur == (sorted_dur + jitter));
     
     if options.durEffect
         % duration effects shape
@@ -75,7 +80,8 @@ for e = 1:length(event_lat(1:end-1))
     end
     
     % starting sample
-    sig = generate_signal_kernel(sigduration, options.shape, EEG.srate, harmonize, rNoise, tmp_scale_factor, signal_strength);
+    sig = generate_signal_kernel2(sigduration, options.shape, EEG.srate, harmonize, rNoise, tmp_scale_factor);
+%     sig = generate_signal_kernel(sigduration, options.shape, EEG.srate, harmonize, rNoise, tmp_scale_factor);
     start = find(sig~=0,1);
     EEG.event(e).dur = dur./EEG.srate;
     EEG.event(e).sigdur = (find(sig(start:end)==0,1)+start)./EEG.srate;
@@ -84,13 +90,6 @@ for e = 1:length(event_lat(1:end-1))
     if options.overlap == 0
         evt1 = evt1 + sum(event_lat(1:e)); % shift to generate no overlap
         EEG.event(e).latency = evt1;
-    elseif ~mod(e, 25) && options.blockdesign == 1
-%         evt1 = evt1 + 2 * EEG.srate; % shift to generate blockdesign
-%         EEG.event(e).latency = evt1;
-%         tmp_latencies = [EEG.event(e:length(event_lat(1:end-1))).latency] + 2 * EEG.srate;
-
-        for i = e:length(event_lat(1:end-1)); EEG.event(i).latency = EEG.event(i).latency + 1 * EEG.srate; end
-        evt1 = EEG.event(e).latency;
     end
     % automatically prolong the signal
     if ~((evt1+size(sig,1)-1)<size(sig1_tmp,2))%((evt1+T_event-1)<size(sig1_tmp,2))  <--- Check if this is valid!!

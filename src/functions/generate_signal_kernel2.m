@@ -1,5 +1,5 @@
-function sig = generate_signal_kernel(dur,shape,srate, harmonize,rNoise, scaling, signal_strength)
-start = 0.05*srate; 
+function sig = generate_signal_kernel2(dur,shape,srate, harmonize,rNoise, scaling)
+start = 0; %0.05*srate; 
 stop = dur; % In samples
 % assert(stop>3*start,'signal duration is too short')
 
@@ -17,7 +17,7 @@ sig = zeros(round(2*length(eventsamples)),1);
 if ~rNoise
     multiplier = 1;
 else
-    multiplier = signal_strength;
+    multiplier = 10;
 end
 %% Make kernel
 switch shape
@@ -31,18 +31,21 @@ switch shape
         sig = sig .* multiplier;
         
     case "posHalf"
-        posSig = sig;
-        pos2Sig = posSig;
+%         posSig = sig;
+%         pos2Sig = posSig;
         constantPeakSize= ceil(0.30*srate);%floor(length(eventsamples)/2);
         
         % Constant first half
-        tmp = hanning(constantPeakSize);
-        posSig(start+1:(start+constantPeakSize/2)) = tmp(1:end/2);
+        tmp1 = hanning(constantPeakSize);
+%         posSig(start+1:(start+constantPeakSize/2)) = tmp1(1:end/2);
         % Changing second half
-        tmp = hanning(2*(length(eventsamples)-constantPeakSize/2));
-        pos2Sig(start+constantPeakSize/2+1:start+(constantPeakSize/2+length(tmp)/2)) = tmp(end/2+1:end);
-
-        sig = posSig + pos2Sig;
+%         tmp2 = hanning(2*(length(eventsamples)-constantPeakSize/2));
+%         pos2Sig(start+constantPeakSize/2+1:start+(constantPeakSize/2+length(tmp)/2)) = tmp(end/2+1:end);
+        tmp2 = hanning(length(eventsamples));
+%         pos2Sig(start+constantPeakSize/2+1:start+(constantPeakSize/2+length(tmp2)/2)) = tmp2(end/2+1:end);
+        
+%         sig = posSig + pos2Sig;
+        sig = vertcat(tmp1(1:ceil(end/2)), tmp2(ceil(end/2)+1:end));
         sig = sig .* multiplier;
         
     case "box"

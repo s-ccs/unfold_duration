@@ -1,4 +1,4 @@
-function plot_result(fn_small,varargin)
+function g = plot_result(fn_small,varargin)
 
 for k = 1:height(fn_small)
     u = load(fullfile("/store/projects/unfold_duration/local",fn_small.folder{k},fn_small{k,'filename'}));
@@ -68,6 +68,6 @@ for k = 1:height(fn_small)
     uf.beta_nodc(:,:,end+1:end+length(u.param)) = u.beta_nodc;
     end
 end
-uf_plotParam(uf,'plotSeparate','event',varargin{:})
+g = uf_plotParam(uf,'plotSeparate','event',varargin{:});
 %%
 end
