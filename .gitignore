@@ -7,3 +7,6 @@
 /lib/SEREEGA
 /lib/gramm
 /src/PlutoNB/*.eps
+/src/plotting/*.eps
+/src/plotting/*.pdf
+/src/plotting/*.svg

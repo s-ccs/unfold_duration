@@ -100,7 +100,8 @@ signals{2} = struct();
 
 signals{1} = intercept;
 signals{1}.overlap = simCFG.overlap(1);
-signals{1}(2) = spline;
+signals{1}(2) = 
+;
 signals{1}(3) = intercept;
 signals{1}(3).effectsize = 0;
 signals{1}(2).rt = simCFG.rtA;
