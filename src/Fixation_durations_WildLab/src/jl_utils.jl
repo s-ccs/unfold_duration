@@ -203,10 +203,10 @@ function fit_Unfold_model(
         bf_stimulus, bf_fixation = bf_events
 
         # Match the formulas and basis functions to their corresponding event type
-        bfDict = Dict(
+        bf_vector = [
             "stimulus" => (f_stimulus, bf_stimulus),
             "fixation" => (f_fixation, bf_fixation),
-        )
+        ]
 
         # Fit continuous Unfold model
         @info(
@@ -214,7 +214,7 @@ function fit_Unfold_model(
         )
         m = fit(
             UnfoldModel,
-            bfDict,
+            bf_vector,
             events,
             data,
             eventcolumn = "type",
@@ -231,7 +231,7 @@ function fit_Unfold_model(
         )
         m = fit(
             UnfoldModel,
-            Dict("fixation" => (f_fixation, times), "stimulus" => (f_stimulus, times)),
+            ["fixation" => (f_fixation, times), "stimulus" => (f_stimulus, times)],
             events,
             data_epochs,
             eventcolumn = "type",
