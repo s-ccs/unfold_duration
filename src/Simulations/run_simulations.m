@@ -9,8 +9,9 @@ emptyEEG.srate = 100; %Hz
 emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 harmonize = 1; % Harmonize shape of Kernel? 1 = Yes; 0 = No
-saveFolder = "20240227_sim_realNoise_HanningShapes_filtered"; % Folder to save in; Final used one: sim_realNoise_HanningShapes
+saveFolder = "20240618_sim_realNoise_HanningShapes_filtered_onlyNoise"; % Folder to save in; Final used one: sim_realNoise_HanningShapes
 filter = 0.05; % final 0.05
+signal_strength = 0; % signal strength in noise condition; standard is/ was 10
 
 %% Check for regularization (based on folder name)
 if regexp(saveFolder', regexptranslate('wildcard', '**regularize'))
@@ -31,10 +32,24 @@ if (regexp(saveFolder', regexptranslate('wildcard', '**realNoise')) && ~exist('N
     genNoise = 1;
 end
 
+%% blockdesign?
+if (regexp(saveFolder', regexptranslate('wildcard', '**blockdesign')))
+    blockdesign = 1;
+else
+    blockdesign = 0;
+end
+
+%% Is jitter used?
+if (regexp(saveFolder', regexptranslate('wildcard', '**jittered')))
+    jitter = 1;
+else
+    jitter = 0;
+end
+
 % Start Parpool
 % parpool('local', 10)
 %%
-for iter = 1:50 %:5 %50
+for iter = 40 %1:50 %50
     for durEffect = [0 1]
         for shape = {'hanning', 'posHalf', 'scaledHanning'} % possible {'box','posNeg','posNegPos','hanning', 'posHalf', 'scaledHanning'}
             for overlap = [0 1]
@@ -49,7 +64,12 @@ for iter = 1:50 %:5 %50
                                 tmpNoise = {0};
                             end
                             %% Simulate data with the given properties
-                            EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise,N);
+                            if jitter
+                                EEG = generate_eeg2(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise,N);
+                            else
+                                EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise,N, signal_strength, blockdesign);
+                            end
+                            
                             center= quantile([EEG.event.dur],linspace( 1/(10+1), 1-1/(10+1), 10));
                             binEdges = conv([-inf center inf], [0.5, 0.5], 'valid');
                             [~,~,indx] = histcounts([EEG.event.dur],binEdges);
@@ -66,14 +86,14 @@ for iter = 1:50 %:5 %50
                                 filtFlag = 0;
                             end
                             
-                            %                     for formula = {'y~1'
-                            %                             'y~1+cat(durbin)'
-                            %                             'y~1+dur'
-                            %                             'y~1+spl(dur,5)'
-                            %                             'y~1+spl(dur,10)'
-                            %                             'theoretical'}'
-                            for formula = {'y~1+spl(dur,5)'
+                            for formula = {'y~1'
+                                    'y~1+cat(durbin)'
+                                    'y~1+dur'
+                                    'y~1+spl(dur,5)'
+                                    'y~1+spl(dur,10)'
                                     'theoretical'}'
+                                %                             for formula = {'y~1+spl(dur,5)'
+                                %                                 'theoretical'}'
                                 %% Fit Signal
                                 if formula{1} == "theoretical"
                                     % in this case we produce the "ideal" simulation
@@ -89,7 +109,7 @@ for iter = 1:50 %:5 %50
                                     
                                     for d = 1:length(durations)
                                         tmp_scale_factor = scale_factors(sorted_dur == durations(d));
-                                        tmp= generate_signal_kernel(durations(d)*EEG.srate*overlapModifier,shape{1},EEG.srate,harmonize, 0, tmp_scale_factor);
+                                        tmp= generate_signal_kernel(durations(d)*EEG.srate*overlapModifier,shape{1},EEG.srate,harmonize, 0, tmp_scale_factor, signal_strength);
                                         sig(1,tmin+1:min(tmin+length(tmp),end),d+1) = tmp(1:min(end,size(sig,2)-tmin));
                                     end
                                     
@@ -97,7 +117,7 @@ for iter = 1:50 %:5 %50
                                     % the theoretical one has to be multiplied as
                                     % well
                                     if (genNoise && noise == 1)
-                                        sig = sig .* 10;
+                                        sig = sig .* signal_strength;
                                     end
                                     
                                     % If filter is used during simulation zero-pad

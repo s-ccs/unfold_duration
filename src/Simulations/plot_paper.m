@@ -56,13 +56,15 @@ end
 hold off
 
 %% continous simulated EEG one shape
-rng(1)
+rng(3)
 % Generate EEG
 N_event = 500; % max number of events
 emptyEEG = eeg_emptyset();
-emptyEEG.srate = 250; %Hz
+emptyEEG.srate = 100; %Hz
 emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
+signalstrength = 10;
+blockdesign = 1;
 
 %
 N = struct();
@@ -81,16 +83,25 @@ if (noise == 1)
 else
     tmpNoise = {0};
 end
-EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise, N);
-% 
-% pop_eegplot( EEG, 1, 1, 1);
-% plot(EEG.data(2500:3250))
+%%
+EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},noise,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise, N, signalstrength, blockdesign);
+%% 
+pop_eegplot( EEG, 1, 1, 1);
+%%
+ix = [200 700];
+figure()
+hold all
+plot(ix(1):ix(2),EEG.data(ix(1):ix(2)))
+% ylim([0 1.3])
+evts = [EEG.event(extractfield(EEG.event, 'latency') > ix(1) & extractfield(EEG.event, 'latency') < ix(2)).latency];
+vline(evts, 'r')
+vline(evts + 5, 'b')
 %% Make Figure showing individual shapes/ no noise/ noise
 rng(1)
 tmpNoise = rNoise(randperm(length(rNoise),1));
 
-EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},0,overlapModifier,N_event,T_event,durEffect,harmonize,{0}, N);
-EEGNoise = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},1,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise, N);
+EEG = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},0,overlapModifier,N_event,T_event,durEffect,harmonize,{0}, N, signalstrength, blockdesign);
+EEGNoise = generate_eeg(emptyEEG,shape{1},overlap,overlapdistribution{1},1,overlapModifier,N_event,T_event,durEffect,harmonize,tmpNoise, N, signalstrength, blockdesign);
 
 %% isolated EEG
 % Init matrix for all shapes
@@ -110,8 +121,9 @@ for e = 1:length(EEG.event)
 end
 
 %%
-% wdw = [2500 3250];
-wdw = [1600 2800];
+% wdw = [1 6000];
+wdw = [800 1550];
+% wdw = [2100 2650];
 figure()
 t = tiledlayout(3,1);
 nexttile
@@ -122,18 +134,18 @@ for p = first:last
     plot(mate(p,wdw(1):wdw(2)).*10)
 end
 %hold off
-ylim([-20 35])
+% ylim([-20 35])
 
 %nexttile
-plot(EEG.data(wdw(1):wdw(2)).*10, 'b')
-ylim([-10 35])
+% plot(EEG.data(wdw(1):wdw(2)).*10, 'b')
+ylim([-15 35])
 hold off
 
-nexttile
+% nexttile
 hold all
 %plot(EEGNoise.data(wdw(1):wdw(2)))
 plot(EEG.data(wdw(1):wdw(2)).*10, 'b')
-ylim([-10 35])
+ylim([-15 35])
 hold off
 
 x = tmpNoise{1}(randperm(size(tmpNoise,1),1),:);
@@ -145,10 +157,10 @@ noiseOnly = x(1:length(EEG.data));
 nexttile
 hold all
 plot(EEGNoise.data(wdw(1):wdw(2)))
-plot(EEG.data(wdw(1):wdw(2)).*10, 'g')
-plot(AddNoiseData(wdw(1):wdw(2)))
-plot(noiseOnly(wdw(1):wdw(2)), 'r')
-ylim([-20 35])
+% plot(EEG.data(wdw(1):wdw(2)).*10, 'g')
+% plot(AddNoiseData(wdw(1):wdw(2)))
+% plot(noiseOnly(wdw(1):wdw(2)), 'r')
+ylim([-15 35])
 hold off
 
         

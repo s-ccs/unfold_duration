@@ -1,6 +1,6 @@
 %% -----------
 %load data
-folder = '20240227_sim_realNoise_HanningShapes_filtered'; % Change to desired folder;
+folder = '20240618_sim_realNoise_HanningShapes_filtered_onlyNoise'; % Change to desired folder;
                    % sim = initial simulation; sim2 = 2 event simulations; 
                    % sim2-1 = 2 events, double trials; sim3 = real events;
                    % sim_regularize = reularization
@@ -17,11 +17,23 @@ folder = '20240227_sim_realNoise_HanningShapes_filtered'; % Change to desired fo
                    % "sim_realNoise_HanningShapes_filtered"= final three shapes used
                    % 20240227_sim_realNoise_HanningShapes_filtered = after
                    % theoretical filter bugfix
+                   % 20240315_sim_realNoise_HanningShapes_regularize_filtered
                    % sim_realNoise_HanningShapes
                    % sim_realNoise_HanningShapes_regularize_filtered
                    % 'sim_realNoise_playground' = various;
-                   
-csv_flag = 0; % Indicate if loading should NOT (= 0) look for an existing csv Result/MSE file; overwrites existing CSV results;
+                   % 20240416_sim_realNoise_HanningShapes_regularize_filtered_jittered
+                   % 20240422_sim_realNoise_HanningShapes_filtered_highSNR
+                   % 20240424_sim_realNoise_HanningShapes_filtered_onlyNoise
+                   % 20240429_sim_realNoise_HanningShapes_filtered_1.0_onlyNoise
+                   % 20240508_sim_realNoise_HanningShapes_filtered_blockdesign_onlyNoise
+                   % 20240508_sim_realNoise_HanningShapes_filtered_blockdesign
+                   % 20240618_sim_realNoise_HanningShapes_filtered_blockdesign
+                   % (20240618 after bugfix where only one shape was
+                   % shifted)
+                   % 20240618_sim_realNoise_HanningShapes_filtered_blockdesign_onlyNoise
+                   % 20240618_sim_realNoise_HanningShapes_filtered_onlyNoise
+                    
+csv_flag = 1 % Indicate if loading should NOT (= 0) look for an existing csv Result/MSE file; overwrites existing CSV results;
 tmp_fn = dir(fullfile('/store/projects/unfold_duration/local',folder, '*.mat'));
 tmp_fn = {tmp_fn.name};
 fn = cellfun(@(x)strsplit(x,'_'),tmp_fn,'UniformOutput',false);
@@ -42,19 +54,23 @@ fn = load_sim_data(fn, folder, csv_flag);
 % ix  =fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"&fn.overlap=="overlap-0"& fn.formula ~= "y~1";
 % ix  = fn.shape=="posHalf" & fn.durEffect == "durEffect-1" & fn.iter=="iter-48" & fn.overlapdist=="halfnormal" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-0" & fn.formula ~= "y~1";
 % ix  = fn.shape=="posNegPos" & fn.durEffect == "durEffect-0" & fn.iter=="iter-10" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-0.00"& fn.overlap=="overlap-1";
-% ix  = fn.shape=="scaledHanning" & fn.durEffect == "durEffect-1" & fn.iter=="iter-5" & fn.overlapdist=="halfnormal" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1" & fn.formula ~= "y~1"; % This one was used for the Figure in paper
-ix  = fn.shape=="posHalf" & fn.durEffect == "durEffect-1" & fn.iter=="iter-5" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1" & fn.formula ~= "y~1"; % This one was used for the Figure in paper
+% ix  = fn.shape=="scaledHanning" & fn.durEffect == "durEffect-1" & fn.iter=="iter-27" & fn.overlapdist=="halfnormal" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1" & fn.formula ~= "y~1"; % This one was used for the Figure in paper
+ix  = fn.shape=="posHalf" & fn.durEffect == "durEffect-1" & fn.iter=="iter-40" & fn.overlapdist=="uniform" & fn.overlapmod == "overlapmod-1.5.mat" & fn.noise=="noise-1.00"& fn.overlap=="overlap-1" & fn.formula ~= "y~1"; % This one was used for the Figure in paper
 
 
 % ix = fn.overlapdist == "uniform" & fn.shape=="posNegPos" & fn.overlapmod == "overlapmod-1.5.mat" & fn.formula == "y~1";
-plot_result(fn(ix,:))
+g = plot_result(fn(ix,:));
+for a = 1:length(g.facet_axes_handles); g.facet_axes_handles(a).YLim = [-8 20]; end
+% hold all
+% ylim([-0.5 20])
 
+% saveas(gcf, '20240525QualiResults', 'epsc')
 %% Calculate some kind of deviance
 % calculate MSE and Normalize toward y~1
 fn_MSE = calc_sim_MSE(fn, folder, csv_flag);
 
 %% Find best/ worst MSE for given ix
-ix_MSE  = fn_MSE.shape=="posHalf" & fn_MSE.durEffect == "durEffect-1" & fn_MSE.overlapdist=="uniform" & fn_MSE.overlapmod == "overlapmod-1.5.mat" & fn_MSE.noise=="noise-1.00"& fn_MSE.overlap=="overlap-1" & fn_MSE.formula == "y~1+spl(dur,10)";
+ix_MSE  = fn_MSE.shape=="scaledHanning" & fn_MSE.durEffect == "durEffect-1" & fn_MSE.overlapdist=="uniform" & fn_MSE.overlapmod == "overlapmod-1.5.mat" & fn_MSE.noise=="noise-1.00"& fn_MSE.overlap=="overlap-1" & fn_MSE.formula == "y~1+spl(dur,10)";
 ix_MSE_noDur  = fn_MSE.shape=="scaledHanning" & fn_MSE.durEffect == "durEffect-0" & fn_MSE.overlapdist=="halfnormal" & fn_MSE.overlapmod == "overlapmod-1.5.mat" & fn_MSE.noise=="noise-1.00"& fn_MSE.overlap=="overlap-1" & fn_MSE.formula ~= "theoretical";
 
 min_iter = find(fn_MSE.normMSE == min(fn_MSE.normMSE(ix_MSE,:)));
@@ -63,8 +79,8 @@ min_iter_noDur = find(fn_MSE.normMSE == min(fn_MSE.normMSE(ix_MSE_noDur,:)));
 max_iter_noDur = find(fn_MSE.normMSE == max(fn_MSE.normMSE(ix_MSE_noDur,:)));
 
 %%
-fn_MSE.iter(min_iter_noDur)
-fn_MSE.MSE(min_iter_noDur)
+fn_MSE.iter(min_iter)
+% fn_MSE.MSE(min_iter_noDur)
 
 %% Display MSE results
 figure
