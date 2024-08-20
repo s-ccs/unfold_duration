@@ -23,7 +23,7 @@ assert(~ischar(simCFG),simCFG)
 
 % mean interstimulus interval
 cfg = [];
-cfg.srate = simCFG.srate;%Hz
+cfg.srate = simCFG.srate; %Hz
 cfg.pnts= simCFG.datalength*cfg.srate; % default: 10 times 60s, thus 10minute of data
 cfg.noise = simCFG.noise;
 
@@ -42,21 +42,27 @@ sig.n170 = zeros(1,length(sig.time),1);
 sig.button = zeros(1,length(sig.time),1);
 
 % First half of response
-timePosPeak = sig.time>0.05 & sig.time < 0.15;
-sig.shape(timePosPeak) = 2.5*hanning(sum(timePosPeak));
+% timePosPeak = sig.time>0.05 & sig.time < 0.15;
+% sig.shape(timePosPeak) = 2.5*hanning(sum(timePosPeak)); % This is the original first positive peak; uncomment for more realistic ERP
+% sig.shape(timePosPeak) = zeros(timePosPeak,1); % This was done to get one hanning as response
 % sig.amplituderesponse(timePosPeak) = 1*hanning(sum(timePosPeak));
-timeNegPeak = sig.time>0.13 & sig.time < 0.23;
-sig.shape(timeNegPeak) =   sig.shape(timeNegPeak)-0.5*hanning(sum(timeNegPeak))';
-sig.n170(timeNegPeak ) = hanning(sum(timeNegPeak))';
+
+% timeNegPeak = sig.time>0.13 & sig.time < 0.23;
+% sig.shape(timeNegPeak) =   sig.shape(timeNegPeak)-0.5*hanning(sum(timeNegPeak))';
+% sig.shape(timeNegPeak) =   zeros(timeNegPeak)';
+% sig.n170(timeNegPeak ) = hanning(sum(timeNegPeak))';
+% sig.n170(timeNegPeak ) = zeros(timeNegPeak)';
+
 
 % Buttonpress
 timeButtonpress = sig.time>-0.2 & sig.time<0.2; % 400ms buttonpress
 sig.button(timeButtonpress) = 4*hanning(sum(timeButtonpress));
 
 % Second half of response/ "Effect"
-timePosPeak2 = sig.time>0.21 & sig.time < 0.5;
-sig.shape(timePosPeak2) = sig.shape(timePosPeak2) + 2*hanning(sum(timePosPeak2))';
-sig.amplituderesponse(timePosPeak2) = 1*hanning(sum(timePosPeak2)); % This will be used to show the effect
+% timePosPeak2 = sig.time>0.21 & sig.time < 0.5;
+timePosPeak2 = sig.time>0.05 & sig.time < 0.45;
+sig.shape(timePosPeak2) = sig.shape(timePosPeak2) + 0.75*hanning(sum(timePosPeak2))';
+sig.amplituderesponse(timePosPeak2) = 0.75*hanning(sum(timePosPeak2)); % This will be used to show the effect
 
 
 tmpshape = sig.shape;
@@ -100,25 +106,26 @@ signals{2} = struct();
 
 signals{1} = intercept;
 signals{1}.overlap = simCFG.overlap(1);
-signals{1}(2) = 
-;
+signals{1}(2) = spline;
 signals{1}(3) = intercept;
-signals{1}(3).effectsize = 0;
+signals{1}(3).effectsize = 0.5;
 signals{1}(2).rt = simCFG.rtA;
 
 signals{2} = intercept;
 signals{2}.overlap = simCFG.overlap(2);
 signals{2}.eventname = 'stimulusB';
 signals{2}(2) = spline;
-signals{2}(2).rt = simCFG.rtB;
+signals{2}(2).rt = simCFG.rtB; % +150ms to increase effect
 
 
 if strcmp(simCFG.condition,'eyemovements')
     signals{1}(2).function = @(x)lognrnd(0.5,0.5,1);
     signals{2}(2).function = @(x)lognrnd(0.8,0.5,1);
 elseif strcmp(simCFG.condition,'buttonpress')
-    signals{1}(2).function = @(x)randn(1)*0.1 + 1.25;
+    signals{1}(2).function = @(x)randn(1)*0.1 + 1.25; % This is not actually used in the end
     signals{2}(2).function = @(x)randn(1)*0.1 + 1.3;
+%     signals{1}(2).function = @(x)randn(1)/0.1 + 1.25;
+%     signals{2}(2).function = @(x)randn(1)/0.1 + 1.3;
     signals{2}(2).effectsize = 5;
     signals{1}(2).effectsize = 5;
     % at the end we want Stimulus A, Buttonpress, Stimulus B, Buttonpress
@@ -262,7 +269,7 @@ for sIx = 1:length(signals)
              EEG_tmp=generate_signal_paper(X{sIx},eventTimes(eventSignal==sIx),tmpsig,signals{sIx},cfg);
         else
             tmpsig.shape = tmpsig.shape(1:3);
-            EEG_tmp=generate_signal_paper(X{sIx},eventTimes(eventSignal==sIx),tmpsig,signals{sIx},cfg,@(x)(log(x-1)-log(0.1)));
+            EEG_tmp=generate_signal_paper(X{sIx},eventTimes(eventSignal==sIx),tmpsig,signals{sIx},cfg,@(x)(log(x+0.5)-log(0.1)));
 %             EEG_tmp=generate_signal_paper(X{sIx},eventTimes(eventSignal==sIx),tmpsig,signals{sIx},cfg,@(x)((x).^2)-1.5);
         end
     end
