@@ -1,57 +1,38 @@
 //#import "@preview/chemicoms-paper:0.1.0": template, elements;
-#import "@preview/splendid-mdpi:0.1.0"
+#import "@preview/arkheion:0.1.0": arkheion, arkheion-appendices
 #import "@preview/equate:0.2.0": equate
 #import "@preview/wrap-it:0.1.0": wrap-content
 
 #set page(paper: "a4", margin: (left: 10mm, right: 10mm, top: 12mm, bottom: 15mm))
 
-#show: splendid-mdpi.template.with(
-  title: [Brain responses vary in duration - modelling strategies and challenges],
+#show: arkheion.with(
+  title: "Brain responses vary in duration - modelling strategies and challenges",
   authors: (
-    (
-      name: "René Skukies",
-      department: "Computational Cognitive Science",
-      institution: "University of Stuttgart - SimTech",
-      city: "Stuttgart",
-      country: "Germany",
-      mail: "Rene.Skukies@vis.uni-stuttgart.de",
-    ),
-    (
-      name: "Judith Schepers",
-      department: "Computational Cognitive Science",
-      institution: "University of Stuttgart",
-      city: "Stuttgart",
-      country: "Germany",
-      mail: "Judith.Schepers@vis.uni-stuttgart.de",
-    ),
-    (
-      name: "Benedikt Ehinger",
-      department: "Computational Cognitive Science",
-      institution: "University of Stuttgart - SimTech",
-      city: "Stuttgart",
-      country: "Germany",
-      mail: "Benedikt.Ehinger@vis.uni-stuttgart.de",
-    ),
+    (name: "René Skukies", 
+    email: "Rene.Skukies@vis.uni-stuttgart.de", 
+    affiliation: "University of Stuttgart - SimTech", 
+    orcid: "0000-0000-0000-0000"),
+    
+    (name: "Judith Schepers", 
+    email: "Judith.Schepers@vis.uni-stuttgart.de", 
+    affiliation: "University of Stuttgart", 
+    orcid: "0000-0000-0000-0000"),
+    
+    (name: "Benedikt Ehinger", 
+    email: "Benedikt.Ehinger@vis.uni-stuttgart.de", 
+    affiliation: "University of Stuttgart - SimTech", 
+    orcid: "0000-0000-0000-0000"),
   ),
-  date: (
-    year: 2024,
-    month: "September",
-    day: 16,
-  ),
-  keywords: (
-    "EEG",
-    "Event duration",
-    "Regression ERP",
-    "Deconvolution",
-    "Overlap Correction",
-  ),
-  doi: "10:7891/120948510",
+  // Insert your abstract after the colon, wrapped in brackets.
+  // Example: `abstract: [This is my abstract...]`
   abstract: [
     Typically, event related brain responses are calculated invariant to the underlying event-duration, even in cases where event-durations observably vary: with reaction times, fixation durations, word lengths or varying stimulus durations. Additionally, an often co-occurring consequence of differing event durations is a variable overlap of the responses towards single events. While the problem of overlap e.g. in BOLD-fMRI and EEG is successfully addressed using linear deconvolution, it is unclear whether deconvolution and duration covariate estimation can be jointly estimated, as both are dependent on the same inter-event-distance variability.
 Here, we show that failing to explicitly account for event durations can lead to spurious results and thus are important to consider. Next, we propose and compare several methods based on multiple regression to explicitly account for stimulus durations. Using simulations, we find that non-linear spline regression of the duration effect outperforms other candidate approaches. Finally, we show that non-linear event duration modelling is compatible with linear overlap-correction in time, making it a flexible and appropriate tool to model overlapping brain signals. 
 This allows us to reconcile the analysis of stimulus responses with e.g. condition-biased reaction times, condition-biased stimulus duration or fixation-related activity with condition-biased fixation durations.
 While in this paper we focus on EEG analyses, these findings generalize to LFPs, fMRI BOLD-responses, pupil dilation responses and other overlapping signals.
-  ]
+  ],
+  keywords: ("event duration", "EEG", "regression ERP", "deconvolution", "rERP"),
+  date: "September 20, 2024",
 )
 
 /*#show: template.with(
@@ -98,7 +79,7 @@ While in this paper we focus on EEG analyses, these findings generalize to LFPs,
 
 #set heading(numbering: "1." )
 
-
+#pagebreak()
 = Introduction
 
 == Event Related Potentials
@@ -141,8 +122,8 @@ Here, we propose to incorporate linear deconvolution as well as event duration a
 To show the validity of our approach, we make use of systematic simulations and compare spline-regression with multiple alternative ways of modelling event duration. We further explore  potential interactions with overlapping signals. 
 
 #figure(
-  image("assets/20240807Fig2_ProblemRTeffect.svg", width: 100%),
-  caption: [Potential influence of reaction in an Oddball task. (A) experimental sequence of the classical active oddball task; Reaction time from the participant controls the duration of a trial. (B) Observed EEG during the task (bottom) and underlying single event responses. (C) Distribution of response times between conditions of a single subject in an active oddball task from the ERP core dataset @kappenman.etal_2021. (D) Isolated response to stimulus and response, including the effect of reaction time on the stimulus response. (E) Results from a classical average ERP analysis. Many artefactual differences are visible. (F) Average ERP after overlap correction. (G) ERP after overlap correction and covariate control through general additive modelling, showing that no condition effect was simulated. For a similar figure showcasing fixation related potentials and the effect of fixation duration, see figure 2 in #cite(<dimigen.ehinger_2021>, form: "prose") and for face-related activity #cite(<ehinger.dimigen_2019>, form: "prose").],
+  image("assets/20240920Figure2_full.svg", width: 100%),
+  caption: [Potential influence of reaction in an Oddball task. (A) experimental sequence of the classical active oddball task; Reaction time from the participant controls the duration of a trial. (B) Observed EEG during the task (top) and underlying single event responses. (C) Distribution of response times between conditions of a single subject in an active oddball task from the ERP core dataset @kappenman.etal_2021. (D) Isolated response to stimulus and response, including the effect of reaction time on the stimulus response. (E) Results from a classical average ERP analysis. Many artefactual differences are visible. (F) Average ERP after overlap correction. (G) ERP after overlap correction and covariate control through general additive modelling, showing that no condition effect was simulated. For a similar figure showcasing fixation related potentials and the effect of fixation duration, see figure 2 in #cite(<dimigen.ehinger_2021>, form: "prose") and for face-related activity #cite(<ehinger.dimigen_2019>, form: "prose").],
 ) <Problem>
 
 = Methods
