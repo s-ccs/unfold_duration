@@ -1,8 +1,18 @@
 ### A Pluto.jl notebook ###
-# v0.19.45
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
 
 # ╔═╡ 6aec0304-82f7-11ee-385c-110008981f4f
 begin
@@ -35,11 +45,11 @@ begin
     get_unfold_svg(t) =  base_unfold*"$t.svg" |> download|> Rsvg.handle_new_from_file
 end
 
-# ╔═╡ c60b40f1-b5c7-4865-8041-90f1e8c97b3f
-size(df,1)/3
-
 # ╔═╡ a4921d9c-8428-41bb-b370-297e77ab33be
 unique(df.formula)
+
+# ╔═╡ 95294df0-4116-41f0-8d7f-e5a25ff921b2
+@bind noise PlutoUI.Select(["noise-0.00", "noise-1.00"], default = "noise-1.00")
 
 # ╔═╡ 5fa22a45-dae5-4443-bc70-64a031578c24
 md"""
@@ -56,7 +66,7 @@ begin
 	# Plot without simulated overlap Figure X.D
 	plt_NoSimOV = data(@rsubset(df,
 			:shape == "scaledHanning",
-			:noise =="noise-1.00",
+			:noise ==noise,
 			:overlap == "overlap-0",
 			:overlapmod == "overlapmod-1.5.mat",
 			:overlapdist == "halfnormal",
@@ -69,7 +79,7 @@ begin
 	# Plot without overlap but with dur effect Figure X.E
 	plt_NoSimOVDur = data(@rsubset(df,
 			:shape == "scaledHanning",
-			:noise =="noise-1.00",
+			:noise =="noise-0.00",
 			:overlap == "overlap-0",
 			:overlapmod == "overlapmod-1.5.mat",
 			:overlapdist == "halfnormal",
@@ -82,7 +92,7 @@ begin
 	# Plot with overlap correction Figure or duration effect X.E
 	plt_wOV = data(@rsubset(df,
 		:shape == shape,
-		:noise =="noise-1.00",
+		:noise ==noise,
 		:overlap == "overlap-1",
 		:overlapmod == "overlapmod-1.5.mat",
 		:overlapdist == "halfnormal",
@@ -92,23 +102,11 @@ begin
 		:formula !="y~1",
 	)) * visual(BoxPlot) * mapping(:formula=>sorter(sorting...), target[2], color=:formula)
 
-	# Plot with overlap correction Figure X.D
-	plt_wOC = data(@rsubset(df,
-		:shape == shape,
-		:noise =="noise-1.00",
-		:overlap == "overlap-1",
-		:overlapmod == "overlapmod-1.5.mat",
-		:overlapdist == "halfnormal",
-		#:overlapdist == "uniform",
-		:durEffect == "durEffect-0",
-		:formula != "theoretical",
-		:formula !="y~1",
-	)) * visual(BoxPlot) * mapping(:formula=>sorter(sorting...), target[2], color=:formula)
 
 	# Plot with simulated dur effect and overlap correction Figure X.C
 	plt_durEF = data(@rsubset(df,
 		:shape == shape,
-		:noise =="noise-1.00",
+		:noise ==noise,
 		:overlap == "overlap-1",
 		:overlapmod == "overlapmod-1.5.mat",
 		:overlapdist == "halfnormal",
@@ -117,6 +115,18 @@ begin
 		:formula != "y~1",
 	)) * visual(BoxPlot) * mapping(:formula=>sorter(sorting...), target[1], color=:formula)
 
+	# Plot with overlap correction Figure X.D
+	plt_wOC = data(@rsubset(df,
+		:shape == shape,
+		:noise ==noise,
+		:overlap == "overlap-1",
+		:overlapmod == "overlapmod-1.5.mat",
+		:overlapdist == "halfnormal",
+		#:overlapdist == "uniform",
+		:durEffect == "durEffect-0",
+		:formula != "theoretical",
+		:formula !="y~1",
+	)) * visual(BoxPlot) * mapping(:formula=>sorter(sorting...), target[2], color=:formula)
 end;
 
 # ╔═╡ 8ede3200-59a1-47fa-8dac-5765bc147f90
@@ -126,7 +136,7 @@ md"""
 
 # ╔═╡ 884dd176-f10e-4513-a84e-65b1bb81cc59
 begin
-	tickpos=[0, 1, 2.2]
+	tickpos=[0, 1, 2.5]
 	ticklabels = ["0", "1", "A","B","C","D","E"]
 	ticksize= 21
 	ytickvis = true
@@ -142,7 +152,7 @@ begin
 		yticks=(tickpos, [ticklabels[1],ticklabels[2],ticklabels[3]]), yticklabelsize=ticksize)
 
 	# Panel B
-	ax_2x2_2 = Axis(fig_2x2[2,2:3], xgridvisible = false,
+	ax_2x2_2 = Axis(fig_2x2[1,4:5], xgridvisible = false, #1,4:5
 	        ygridvisible = false, 
 			yticksvisible = ytickvis, 
 			xticklabelsvisible = false, 
@@ -151,7 +161,7 @@ begin
 
 
 	# Panel C
-	ax_2x2_3 = Axis(fig_2x2[1,4:5], 
+	ax_2x2_3 = Axis(fig_2x2[2,2:3], 
 		xgridvisible = false, 
 		yticksvisible = ytickvis, 
 		ygridvisible = false, 
@@ -196,7 +206,7 @@ begin
 		ygridvisible = false,
 		yticks=([0,1], ["0", "1"]), 
 		yticksvisible = ytickvis,
-		limits = limits=((0,5),(-0.1,tickpos[3])),
+		limits = limits=((0,5),(-0.6,tickpos[3])),
 		xlabel = "four ways to model \n event duration", 
 		ylabel = "normalized model performance [MSE]",
 		)
@@ -231,6 +241,11 @@ begin
     hidespines!(ax_2x2_12)
     hidedecorations!(ax_2x2_12)
 
+	ax_2x2_13 = Axis(fig_2x2[2,4:5], width=Relative(1), height=Relative(0.25), halign=0.0, valign=0.,limits=((0,1),(-0.5,tickpos[3])))
+	#linkaxes!([ax_35, ax_35_2]...)
+    hidespines!(ax_2x2_13)
+    hidedecorations!(ax_2x2_13)
+
 	# Labels for big (right) plot
 	size_formula = 50
 	size_marker = 70
@@ -242,6 +257,11 @@ begin
 
 	for (i,f) in enumerate(formulas)
     	scatter!(ax_2x2_12,
+			xvalues[i],
+			y_value,
+			marker=get_unfold_svg(f),
+			markersize=size_formula)
+		scatter!(ax_2x2_13,
 			xvalues[i],
 			y_value,
 			marker=get_unfold_svg(f),
@@ -318,7 +338,7 @@ begin
 	#text!(ax_l2, 0, ypos[3],
 		#text="no overlap\nsimulated and/or\n analyzed")
 	
-	#CairoMakie.save("20240619ResultsFigure.eps", fig_2x2)
+	#CairoMakie.save("20240923ResultsFigure.pdf", fig_2x2)
 	
 	fig_2x2
 end
@@ -559,7 +579,7 @@ let
 	
 	noiseDF = @rsubset(df,
 		#:shape == "scaledHanning",
-		:noise =="noise-1.00",
+		:noise ==noise,
 		:overlap == "overlap-1",
 		:overlapmod == "overlapmod-1.5.mat",
 		#:overlapdist == "halfnormal",
@@ -598,7 +618,7 @@ begin
 	
 	noiseDF = @rsubset(df,
 		#:shape == "scaledHanning",
-		:noise =="noise-1.00",
+		:noise ==noise,
 		:overlap == "overlap-1",
 		:overlapmod == "overlapmod-1.5.mat",
 		#:overlapdist == "halfnormal",
@@ -692,7 +712,7 @@ begin
 	hidedecorations!(axLegend2, label = false)
 	hidespines!(axLegend2, :r, :t, :l)
 	
-	#CairoMakie.save("20240619ShapeDistributionEffect.eps", figShape)
+	#CairoMakie.save("20240923ShapeDistributionEffectNoNoise.pdf", figShape)
 	
 	current_figure()
 end
@@ -2580,8 +2600,8 @@ version = "3.5.0+0"
 # ╠═7cba973b-70d9-4543-8cb3-58675379baa6
 # ╠═18ad6a85-a9e0-455d-ab94-ac11d1af6b50
 # ╠═efb4a636-a858-44a0-a4d9-3808d90cee39
-# ╠═c60b40f1-b5c7-4865-8041-90f1e8c97b3f
 # ╠═a4921d9c-8428-41bb-b370-297e77ab33be
+# ╠═95294df0-4116-41f0-8d7f-e5a25ff921b2
 # ╟─5fa22a45-dae5-4443-bc70-64a031578c24
 # ╠═e74155ac-b128-44f9-acda-91022c99b3a9
 # ╟─8ede3200-59a1-47fa-8dac-5765bc147f90

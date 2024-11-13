@@ -9,10 +9,15 @@ emptyEEG.srate = 100; %Hz
 emptyEEG.pnts  = emptyEEG.srate*500; % total length in samples
 T_event   = emptyEEG.srate*1.5; % total length of event-signal in samples
 harmonize = 1; % Harmonize shape of Kernel? 1 = Yes; 0 = No
-saveFolder = "20240618_sim_realNoise_HanningShapes_filtered_onlyNoise"; % Folder to save in; Final used one: sim_realNoise_HanningShapes
+saveFolder = "20240618_sim_realNoise_HanningShapes_filtered_blockdesign"; % Folder to save in; Final used one: sim_realNoise_HanningShapes
 filter = 0.05; % final 0.05
-signal_strength = 0; % signal strength in noise condition; standard is/ was 10
 
+%% Check if only noise condition
+if regexp(saveFolder', regexptranslate('wildcard', '**onlyNoise'))
+    signal_strength = 0;
+else
+    signal_strength = 10; % signal strength in noise condition; standard is/ was 10
+end
 %% Check for regularization (based on folder name)
 if regexp(saveFolder', regexptranslate('wildcard', '**regularize'))
     regularize = 1;
@@ -49,9 +54,9 @@ end
 % Start Parpool
 % parpool('local', 10)
 %%
-for iter = 40 %1:50 %50
-    for durEffect = [0 1]
-        for shape = {'hanning', 'posHalf', 'scaledHanning'} % possible {'box','posNeg','posNegPos','hanning', 'posHalf', 'scaledHanning'}
+for iter = 1:50 %50
+    for durEffect = 0 %[0 1]
+        for shape =  {'scaledHanning'}%{'hanning', 'posHalf', 'scaledHanning'} % possible {'box','posNeg','posNegPos','hanning', 'posHalf', 'scaledHanning'}
             for overlap = [0 1]
                 for overlapdistribution = {'uniform','halfnormal'}
                     for noise = noiseIDX
@@ -109,6 +114,7 @@ for iter = 40 %1:50 %50
                                     
                                     for d = 1:length(durations)
                                         tmp_scale_factor = scale_factors(sorted_dur == durations(d));
+                                        if ~durEffect; tmp_scale_factor = 1; end; 
                                         tmp= generate_signal_kernel(durations(d)*EEG.srate*overlapModifier,shape{1},EEG.srate,harmonize, 0, tmp_scale_factor, signal_strength);
                                         sig(1,tmin+1:min(tmin+length(tmp),end),d+1) = tmp(1:min(end,size(sig,2)-tmin));
                                     end
