@@ -1,3 +1,4 @@
+
 //#import "@preview/chemicoms-paper:0.1.0": template, elements;
 #import "@preview/arkheion:0.1.0": arkheion, arkheion-appendices
 #import "@preview/equate:0.2.1": equate
@@ -7,24 +8,26 @@
 #set par.line(numbering: n => text(size: 6pt)[#n])
 // #set par.line(numbering: "1")
 //-> will work in next release ("soon")
+
 #show: arkheion.with(
   title: "Brain responses vary in duration - modeling strategies and challenges",
   authors: (
     (name: "René Skukies", 
     email: "Rene.Skukies@vis.uni-stuttgart.de", 
-    affiliation: "University of Stuttgart - SimTech", 
+    affiliation: [University of Stuttgart #footnote(<ref_simtech>)#super[,]#footnote(<ref_vis>)], 
     orcid: "0000-0002-4124-4584"),
     
     (name: "Judith Schepers", 
     email: "Judith.Schepers@vis.uni-stuttgart.de", 
-    affiliation: "University of Stuttgart", 
+    affiliation: [University of Stuttgart#footnote(<ref_vis>)], 
     orcid: "0009-0000-9270-730X"),
     
     (name: "Benedikt Ehinger", 
     email: "Benedikt.Ehinger@vis.uni-stuttgart.de", 
-    affiliation: "University of Stuttgart - SimTech", 
+    affiliation: [University of Stuttgart #footnote[Stuttgart Center for Simulation Science]<ref_simtech>#super[,]#footnote[Institute for Visualization and Interactive Systems]<ref_vis>],
     orcid: "0000-0002-6276-3332"),
   ),
+
   // Insert your abstract after the colon, wrapped in brackets.
   // Example: `abstract: [This is my abstract...]`
   abstract: [
@@ -33,9 +36,9 @@ Here, we first show that failing to explicitly account for event durations can l
 This allows us to reconcile the analysis of stimulus responses with e.g. condition-biased reaction times, condition-biased stimulus duration, or fixation-related activity with condition-biased fixation durations.
 While in this paper we focus on EEG analyses, these findings generalize to LFPs, fMRI BOLD-responses, pupil dilation responses, and other overlapping signals.
   ],
-  keywords: ("event duration", "EEG", "regression ERP", "deconvolution", "rERP"),
-  date: "10th October, 2024",
-)
+  keywords: ("event duration", "EEG", "fMRI", "time series", "regression ERP", "deconvolution", "rERP", "spline regression", "GAM",),
+  date: "05th December, 2024",
+) 
 
 /*#show: template.with(
   title: [Brain responses vary in duration - modeling strategies and challenges],
@@ -114,7 +117,7 @@ A helpful example to visualize the process of calculating an ERP can be found in
 
 This classical averaging step, however, cannot account for trial-wise (confounding) influences. For instance, in averaging we typically assume that a “stationary” ERP exists on every single trial, but is contaminated with noise. If we suspect other effects can affect the overall shape of the ERP, then we can no longer use simple averaging as our analysis method.  Examples of this problem and how to address it have been discussed and spearheaded by Pernet & Rousselet in their LIMO approach @pernet.etal_2011, with the rERP approach @smith.kutas_2015 and also in our own work for low-level stimulus confounds @ehinger.dimigen_2019 and for eye-movement attributes @dimigen.ehinger_2021.
 
-Varying event durations likely reflect one such trial-wise influence, manifested through external stimulation (e.g. how long a stimulus is presented in the experiment), as well as internal processes (e.g. how long a stimulus is processed by the brain). Especially the latter is a strong candidate for potential confounds, as stimulus processing times typically differ between conditions @gilbert.sigman_2007 @lange.roder_2006 and populations @der.deary_2006 (see @Problem\.C for different reaction times between conditions in an oddball experiment). Processing times also naturally differ for fixation durations, e.g. in unrestricted viewing @nuthmann_2017, or for certain stimuli, e.g. faces, which are typically fixated longer than other objects @gert.etal_2022.
+Varying event durations likely reflect one such trial-wise influence, manifested through external stimulation (e.g. how long a stimulus is presented in the experiment), as well as internal processes (e.g. how long a stimulus is processed by the brain, often indirectly measured via reaction time). Especially the latter is a strong candidate for potential confounds, as stimulus processing times can be decoded from many brain areas using fMRI @nakuci.etal_2024, but more importantly, typically differ between conditions @gilbert.sigman_2007 @lange.roder_2006, and populations @der.deary_2006 (see @Problem\.C for different reaction times between conditions in an oddball experiment). Processing times also naturally differ for fixation durations, e.g. in unrestricted viewing @nuthmann_2017, or for certain stimuli, e.g. faces, which are typically fixated longer than other objects @gert.etal_2022.
 
 Indeed, previous studies by #cite(<wang.etal_2018>, form: "prose"), #cite(<hassall.etal_2022>, form: "prose"), #cite(<yarkoni.etal_2009>, form: "prose"), #cite(<groen.etal_2022>, form: "prose"), #cite(<brands.etal_2024>, form: "prose") & #cite(<mumford.etal_2023a>, form: "prose") have shown the importance to regard duration as a potential confounder in single-neuron activity, in EEG, iEEG and also fMRI. 
 #cite(<wang.etal_2018>, form: "prose") recorded single-neuron activity from the medial frontal cortex in non-human primates, which performed a task to produce intervals of motor activity (i.e. a hand movement towards a stimulus) of different lengths. Through this, they showed that neural activity temporally scaled with interval length. Building on this research, #cite(<hassall.etal_2022>, form: "prose") extended the idea of temporally scaled signals to human cognition. By using a general linear model containing fixed- and variable-duration regressors, they successfully unmixed fixed- and scaled-time components in human EEG data. Furthermore, #cite(<sun.etal_2024>, form: "prose") recently expressed concerns about reaction time, a prominent example of event duration, as an important confounding variable in response-locked ERPs. Adding to this, #cite(<yarkoni.etal_2009>, form: "prose") and #cite(<mumford.etal_2023a>, form: "prose") emphasized the importance of considering reaction time in fMRI time series modeling.
@@ -147,8 +150,8 @@ We sought to explore whether it is possible to model both event duration and ove
 
 
 #figure(
-  image("assets/20241119SimMethods.svg", width: 100%),
-  caption: [Simulation methods; (A) three different “proto-ERPs” (i.e. ground truths) and the effect the duration factor can have on the respective shape; (B) A single continuous simulation with “scaled hanning” as ground truth with the underlying single overlapping ERPs. Notice the perfect correlation between event distance and duration, i.e. the longer the distance between two events, the more scaled is the hanning shape; (D) the same continuous simulation with noise added.],
+  image("assets/20241127SimMethods.svg", width: 100%),
+  caption: [Simulation methods; (A) three different “proto-ERPs” (i.e. ground truths) and the effect the duration factor can have on the respective shape; (B) A single continuous simulation with “scaled hanning” as ground truth with the underlying single overlapping ERPs. Notice the perfect correlation between event distance and duration, i.e. the longer the distance between two events, the more scaled is the hanning shape; (C) the same continuous simulation with noise added.],
 )<Methods>
 
 As “proto-ERPs” (i.e. ground truth) representing our duration-modulated event signal, we used a hanning window, varying the shape in three different ways:
@@ -191,15 +194,15 @@ In @Quali, we show a representative analysis of one such simulation, using the s
 2) Comparing the top and bottom rows, without and with overlap correction, shows that only with overlap correction we can get close to recovering the original shape. Thus, purely modeling duration effects, cannot replace overlap correction.
 
 #figure(
-  image("assets/20241119QualiResultsScaledHanning.svg", width: 100%),
+  image("assets/20241127QualiResultsScaledHanning.svg", width: 100%),
   caption: [Results from a single simulation for the four tested models (including duration as: linear, categorical, 5-spline, 10-spline variable) combined with (bottom row) and without (top row) overlap correction. Bottom row legend = ground truth. Simulation parameters: shape = scaled hanning; duration simulated = true; distribution = half-normal; noise = true; overlap = true],
 ) <Quali>
 
-However, it is important to keep in mind that this is only a single simulation. To generalize and quantify these potential effects, we calculated the mean squared error (MSE) between each analysis method's predictions and the ground truth, at 15 different event durations. All resulting MSE values are finally normalized to the results of fitting only a single ERP to all events (Wilkinson notation: $y ~ 1$), that is, modeling no duration effect at all (@MainResults).
+However, it is important to keep in mind that this is only a single simulation. To generalize and quantify these potential effects, we calculated the mean squared error (MSE) between each analysis method's predictions and the ground truth for 15 different event durations. All resulting MSE values are finally normalized to the results of fitting only a single ERP to all events (Wilkinson notation: $y ~ 1$), that is, modeling no duration effect at all (@MainResults).
 
 #figure(
-  image("assets/20241121ResultsFigure.svg", width: 100%),
-  caption: [Normalized mean squared error results for the four tested models (including duration as: linear, categorical, 5-spline, 10-spline variable) in different simulation settings. Black line (y-value one) indicated results from classical averaging; MSE of zero indicated perfect estimation of the ground truth. (A) Results when a duration effect,  but no overlap is simulated. The spline strategies outperform the other strategies. (B) Results when no duration effect and no overlap were simulated, but duration effects were still estimated. Little overfit is visible here. (C) Results when duration effects were simulated, signals overlap, and overlap correction was used for modeling. No interaction between duration modeling and overlap correction was observed on the MSE performance. (D) Results when duration effect was not simulated, and signals overlap, and results are overlap corrected.],
+  image("assets/20241205ResultsFigure.svg", width: 100%),
+  caption: [Normalized mean squared error results for the four tested models (including duration as: linear, categorical, 5-spline, 10-spline variable) in different simulation settings. Black line (y-value one) indicates results from classical averaging; MSE of zero indicates perfect estimation of the ground truth. (A) Results when a duration effect,  but no overlap is simulated. The spline strategies outperform the other strategies. (B) Results when no duration effect and no overlap were simulated, but duration effects were still estimated. Little overfit is visible here. (C) Results when duration effects were simulated, signals overlap, and overlap correction was used for modeling. No interaction between duration modeling and overlap correction was observed on the MSE performance. (D) Results when a duration effect was not simulated, and signals overlap, and results are overlap-corrected.],
 )<MainResults>
 
 In the following, we will present the results of the four different simulation settings, modifying both, whether we simulate overlap and duration effects, but also whether we use overlap correction in the analyses. To keep things (relatively) simple, we will first present these results by looking at simulations from only one shape (scaled hanning, see @Methods\.A) and one duration sample distribution (half normal). However, the general conclusions hold true regardless of shape and sampling distribution, as discussed later.
@@ -222,31 +225,36 @@ Additionally, even in cases where ERPs overlap and we would wrongly assume an ef
 
 === Can we model Overlap via Duration Effects?
 
-#cite(<nikolaev.etal_2016>, form: "prose") and #cite(<vanhumbeeck.etal_2018>, form: "prose") raised the idea that overlap effects can be taken into account, using only non-linear splines for the duration predictor, but never explicitly tested this in simulations. As visible in @Quali (compare overlap corrected and not overlap corrected), this seems to be insufficient. We tested this more systematically (depicted in XXX), and in fact, in our simulations, a model without any overlap correction even outperforms modeling overlap via duration. This shows us that we indeed have to, and can, rely on other techniques like linear deconvolution, as proposed in this study.
+#cite(<nikolaev.etal_2016>, form: "prose") and #cite(<vanhumbeeck.etal_2018>, form: "prose") raised the idea that overlap effects can be taken into account, using only non-linear splines for the duration predictor, but never explicitly tested this in simulations. As visible in @Quali (compare overlap-corrected and not overlap-corrected), this seems to be insufficient. We tested whether one can use durations to model the overlap more systematically (depicted in the appendix @DurModVSOC), and in fact, in our simulations, a model without any overlap correction even outperforms modeling overlap via duration. This shows us that we indeed have to, and can, rely on other techniques like linear deconvolution, as proposed in this study.
+
+=== Interaction of Filter and Deconvolution
+
+We noticed an interaction between our use of a high-pass filter and the linear deconvolution, resulting in a DC-offset in the overlap-corrected estimates. This is visible in @Quali (the offset in the baseline period in the overlap-corrected results), and becomes more apparent when we compare non-standardized MSE values with and without overlap correction for the intercept-only model (see appendix @DurModVSOC). Given that we know overlap correction works in the overlap simulated, but no duration effect simulated case, we would have expected overlap-corrected models to perform much better (expressed by lower MSE values) than not overlap-corrected models. And in fact, once we corrected for the baseline offset, MSE values for overlap-corrected results showed exactly this improvement (notice how MSE values improve in the first two figures in appendix @BSL when compared with @MainResults\.C and @DistResults, and compare MSE values for the intercept-only models in appendix @DurModVSOC and the third figure of appendix @BSL). However, not filtering would have resulted in strong baseline problems in the non-overlap corrected mass univariate case. We decided to present the results in the main part of our paper without any baseline correction, as this is the more conservative case, since a baseline correction would further bias results against the mass-univariate models. Moreover, it is not entirely clear whether or how baseline correction should be done in the first place, especially given that in overlap paradigms there often is no "activity-free" baseline period (for the latter see #cite(<nikolaev.etal_2016>, form: "author"), #cite(<nikolaev.etal_2016>, form: "year"), and #cite(<alday_2019>, form: "author"), #cite(<alday_2019>, form: "year")).
+
+At this point, we cannot say for certain where this interaction stems from, however conducting a thorough investigation of this phenomenon is out of the scope of this paper.
 
 === Influence of Shape and Overlap Distribution
 
 There are two more parameters of our simulations that we have not yet presented: the overall shape of the ERP (not only the duration part), and the distribution of durations (and with that, overlap). The overall main conclusions hold true regardless of the set parameters.
 
+Regardless of the shape of the simulated proto-ERP and overlap distribution, spline-modeling of duration consistently gives us the best results (@DistResults\.A-C). However, MSE values and variance increase for the hanning shape (relative to the scaled hanning), and even further for the half hanning shape. Importantly, for the latter, variance in MSE values increased in a way, that for some simulation instances (i.e., for specific seeds) it would have been better to not model duration at all. We think that this increase in variance and value of MSE for the half hanning shape might be due to a saturation effect; if there is less variance in the duration effect to be explained in the first place, then a model without duration effect might perform similarly to a model explicitly modeling it. Lastly, we do not observe a consistent pattern of the influence of the distribution of overlap, but we cannot exclude effects due to more "extreme" distributions (@DistResults color pairs).
+
 #figure(
-  image("assets/20241121ShapeDistributionEffect.svg", width: 100%),
-  caption: [Comparison of normalized mean squared error results for the four tested models (including duration as: linear, categorical, 5-spline, 10-spline variable) between shapes (A-C) and duration distributions (color pairs). The Black line (y-value one) indicates results from classical averaging; A MSE of zero indicates perfect estimation of the ground truth. Parameter settings for all panels: duration affects shape; overlap simulated; overlap corrected/ modeled.],
+  image("assets/20241127ShapeDistributionEffect.svg", width: 100%),
+  caption: [Comparison of normalized mean squared error results for the four tested models (including duration as: linear, categorical, 5-spline, 10-spline variable) between shapes (A-C) and duration distributions (color pairs). The Black line (y-value one) indicates results from classical averaging; A MSE of zero indicates perfect estimation of the ground truth. Parameter settings for all panels: duration affects shape; overlap simulated; overlap-corrected/ modeled.],
 )<DistResults>
 
-Regardless of the shape of the simulated proto-ERP and overlap distribution, spline-modeling of duration consistently gives us the best results (@DistResults\.A-C). However, MSE values and variance increase for the hanning shape (relative to the scaled hanning), and even further for the half hanning shape. Importantly, for the latter, variance in MSE values increased in a way, that for some simulation instances (i.e., for specific seeds) it would have been better to not model duration at all. We think that this increase in variance and value of MSE for the half hanning shape might be due to a saturation effect; if there is less variance in the duration effect to be explained in the first place, then a model without duration effect might perform similarly to a model explicitly modeling it. Lastly, we do not observe a consistent pattern of the influence of the distribution of overlap, but we cannot exclude more extreme choices (@DistResults color pairs).
 
 === The Necessity of Block Experimental Structures <block>
 
-In our initial simulation of duration combined with overlap correction, we noticed strong structured noise patterns. This pattern persisted even when no signal was simulated (@BlockResults\.B), and it completely disappeared when event timings from real datasets were used. We systematically tested different potential sources and found that the block structure of most experiments, that is, having a break after a set of events (@BlockResults\.A lower) resolves this issue. Note that this is not specific to one modeling strategy, but rather the artefact (@BlockResults\.B) can appear even with a linear effect. We quantitatively tested this finding and show that artificially introducing a break after every 25 events (which results in only 20 breaks in our simulations) completely removes this artefact (@BlockResults\.B vs. @BlockResults\.C, @BlockResults\.D). 
+In our initial simulation of duration combined with overlap correction, we noticed a strong structured noise pattern. This pattern persisted even when no signal was simulated (@BlockResults\.B), and it completely disappeared when event timings from real datasets were used. We systematically tested different potential sources and found that the block structure of most experiments, that is, having a break after a set of events (@BlockResults\.A lower) resolves this issue. Note that this is not specific to one modeling strategy, but rather the artifact (@BlockResults\.B) can appear even with a linear effect. We quantitatively tested this finding and show that artificially introducing a break after every 25 events (which results in only 20 breaks in our simulations) completely removes this artefact (@BlockResults\.B vs. @BlockResults\.C, @BlockResults\.D). 
 
 #figure(
-  image("assets/20241119BlockFigure.svg", width: 100%),
+  image("assets/20241127BlockFigure.svg", width: 100%),
   caption: [Comparison of simulations with and without simulated block structure. Up left: Ground truth shape “half hanning” used in the depicted simulation; (A) Continuous simulated EEG and its underlying responses without noise, once without (up), and once with (down) added blocks ; (B) Estimates from one simulation without added blocks, once without any signal in the data (left, i.e. the data contained only noise) and once with added signals (right, i.e. the data contained noise + signal); (C) Estimates from the same simulation, but with added blocks every 25 events, once without any signal in the data (left, i.e. the data contained only noise) and once with added signals (right, i.e. the data contained noise + signal); (D) Comparison of MSE results between simulations with blocks added (full colors) and simulations without any blocks added (cross-hatched colors) for all tested models in conjunction with overlap correction.],
 )<BlockResults>
 
-We assume that when including the inter-event distance both as a predictor, but also explicitly in the FIR time-expanded designmatrix, leads to a specific type of collinearity. This collinearity “blows up” the model estimates, and due to the duration effect, results in smooth wave-like patterns (@BlockResults\.B). When introducing (seemingly) overlap-free events at the beginning and end of a block, this collinearity between the duration and the structure of the designmatrix is broken, and a “unique” solution can be estimated.
-
-#pagebreak()
+We assume that when including the duration both as a predictor, but also explicitly in the FIR time-expanded designmatrix (as inter-event distance), leads to a specific type of collinearity. This collinearity “blows up” the model estimates, and due to the duration effect, results in smooth wave-like patterns (@BlockResults\.B). When introducing (seemingly) overlap-free events at the beginning and end of a block, this collinearity between the duration and the structure of the designmatrix is broken, and a “unique” solution can be estimated.
 
 = Real Data Example: EEG + ET
 
@@ -381,7 +389,7 @@ All code is publicly available at https://github.com/s-ccs/unfold_duration. The 
 
 - #underline[Judith Schepers]: Formal analysis (FRP analysis); Writing - Review & Editing
 
-- #underline[Benedikt Ehinger]: Conceptualization; Methodology; Software; Resources; Supervision; Formal analysis(simulations, FRP analysis); Writing - Review & Editing; Visualization; Funding acquisition
+- #underline[Benedikt Ehinger]: Conceptualization; Methodology; Software; Resources; Supervision; Formal analysis (simulations, FRP analysis); Writing - Review & Editing; Visualization; Funding acquisition
 
 = Funding
 
@@ -414,12 +422,12 @@ Additionally, during simulations the data was down-sampled (default 100Hz) and h
 
 #figure(
   image("assets/20241121ResultsFigure_noNoise.svg", width: 100%),
-  caption: [Normalized mean squared error results for the four tested models (including duration as: linear, categorical, 5-spline, 10-spline variable) in different simulation settings without added noise. Black line (y-value one) indicated results from classical averaging; MSE of zero indicated perfect estimation of the ground truth. (A) Results when a duration effect,  but no overlap is simulated. The spline strategies outperform the other strategies. (B) Results when no duration effect and no overlap were simulated, but duration effects were still estimated. Little overfit is visible here. (C) Results when duration effects were simulated, and signals overlap, and overlap correction is used for modeling. No interaction between duration modeling and overlap correction was observed on the MSE performance. (D) Results when duration was not simulated, and signals overlap.],
+  caption: [Normalized mean squared error results for the four tested models (including duration as: linear, categorical, 5-spline, 10-spline variable) in different simulation settings. Black line (y-value one) indicated results from classical averaging; MSE of zero indicated perfect estimation of the ground truth. (A) Results when a duration effect,  but no overlap is simulated. The spline strategies outperform the other strategies. (B) Results when no duration effect and no overlap were simulated, but duration effects were still estimated. Little overfit is visible here. (C) Results when duration effects were simulated, signals overlap, and overlap correction was used for modeling. No interaction between duration modeling and overlap correction was observed on the MSE performance. (D) Results when duration effect was not simulated, and signals overlap, and results are overlap-corrected.],
 )
 
 #figure(
   image("assets/20240923ShapeDistributionEffectNoNoise_B.svg", width: 100%),
-  caption: [Normalized mean squared error results for the four tested models in simulations without noise (including duration as: linear, categorical, 5-spline, 10-spline variable) between shapes (A-C) and duration distributions (color pairs). Black line (y-value one) indicated results from classical averaging; MSE of zero indicated perfect estimation of the ground truth. Parameter settings for all panels: duration affects shape; overlap simulated; overlap corrected/ modeled.],
+  caption: [Normalized mean squared error results for the four tested models in simulations without noise (including duration as: linear, categorical, 5-spline, 10-spline variable) between shapes (A-C) and duration distributions (color pairs). Black line (y-value one) indicated results from classical averaging; MSE of zero indicated perfect estimation of the ground truth. Parameter settings for all panels: duration affects shape; overlap simulated; overlap-corrected/ modeled.],
 )
 
 #pagebreak()
@@ -427,5 +435,25 @@ Additionally, during simulations the data was down-sampled (default 100Hz) and h
 
 #figure(
   image("assets/20241121_DurationModelling_vs_OverlapCorrection.svg", width: 100%),
-  caption: [Normalized mean squared error results for the four tested models in simulations without noise (including duration as: linear, categorical, 5-spline, 10-spline variable) between shapes (A-C) and duration distributions (color pairs). Black line (y-value one) indicated results from classical averaging; MSE of zero indicated perfect estimation of the ground truth. Parameter settings for all panels: duration affects shape; overlap simulated; overlap corrected/ modeled.],
+  caption: [#emph("Not") normalized mean square error results when overlap is simulated, but no duration effect is simulated for five different models (classical averaging ($y ~1$) plus the four tested models (duration as: linear, categorical, 5-spline, 10-spline variable)), once with overlap correction (blue) and once without overlap correction (orange).],
+)
+
+#pagebreak()
+== MSE Plots of Baseline Corrected Data  <BSL>
+
+Baseline was corrected for each marginalized ERP independently in with a baseline period of -0.5s to 0.0s.
+
+#figure(
+  image("assets/20241121ResultsFigure_bsl.svg", width: 100%),
+  caption: [Normalized mean squared error results #underline[of baseline corrected estimates] for the four tested models (including duration as: linear, categorical, 5-spline, 10-spline variable) in different simulation settings. Black line (y-value one) indicated results from classical averaging; MSE of zero indicated perfect estimation of the ground truth. (A) Results when a duration effect,  but no overlap is simulated. The spline strategies outperform the other strategies. (B) Results when no duration effect and no overlap were simulated, but duration effects were still estimated. Little overfit is visible here. (C) Results when duration effects were simulated, signals overlap, and overlap correction was used for modeling. No interaction between duration modeling and overlap correction was observed on the MSE performance. (D) Results when duration effect was not simulated, and signals overlap, and results are overlap-corrected.],
+)
+
+#figure(
+  image("assets/20241126ShapeDistributionEffect_bsl.svg", width: 100%),
+  caption: [Normalized mean squared error results #underline[of baseline corrected estimates] for the four tested models in simulations without noise (including duration as: linear, categorical, 5-spline, 10-spline variable) between shapes (A-C) and duration distributions (color pairs). Black line (y-value one) indicated results from classical averaging; MSE of zero indicated perfect estimation of the ground truth. Parameter settings for all panels: duration affects shape; overlap simulated; overlap-corrected/ modeled.],
+)
+
+#figure(
+  image("assets/20241126_DurationModelling_vs_OverlapCorrection_bsl.svg", width: 100%),
+  caption: [#emph("Not") normalized mean square error results #underline[of baseline corrected estimates] when overlap is simulated, but no duration effect is simulated for five different models (classical averaging ($y ~1$) plus the four tested models (duration as: linear, categorical, 5-spline, 10-spline variable)), once with overlap correction (blue) and once without overlap correction (orange).],
 )
