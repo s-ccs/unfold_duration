@@ -63,6 +63,7 @@ for e = 1:length(event_lat(1:end-1))
           sigduration = dur*options.overlapModifier;
     else
         % duration does not effect shape
+        tmp_scale_factor = 1;
         sigduration = mean(diff([EEG.event.latency]));
     end
     

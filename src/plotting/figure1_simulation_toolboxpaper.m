@@ -156,7 +156,7 @@ for k = 2:length(et.cond)
     if et.cond(k) == 3
         sigERP= EEG.sim.sig.button;
     else
-          sigERP= EEG.sim.sig.shape{1} + double(et.cond(k)==2) * EEG.sim.signals{1}(3).effectsize * EEG.sim.sig.shape{3} + EEG.sim.signals{1}(2).effectsize*(EEG.sim.sig.shape{2}*log(et.amp(k)));
+          sigERP= EEG.sim.sig.shape{1} + double(et.cond(k)==2) * EEG.sim.signals{1}(3).effectsize * EEG.sim.sig.shape{3} + EEG.sim.signals{1}(2).effectsize*(EEG.sim.sig.shape{2}*log(et.amp(k))) * -1;
     end
     timing = round([((et.when(k)-0.5)*EEG.srate):((et.when(k)+0.5)*EEG.srate)-1]);
     
@@ -173,9 +173,11 @@ end
 box off
 % xlim([0,2])
 xlim([0 10])
+ylim([-2 9])
 subplot(3,1,2)
 
 plot((1:length(sig))/EEG.srate,sig)
 vline(et.when);
 xlim([0 10])
+ylim([-2 9])
 
