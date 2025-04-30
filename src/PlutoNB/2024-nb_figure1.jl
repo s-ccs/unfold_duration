@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.37
+# v0.19.45
 
 using Markdown
 using InteractiveUtils
@@ -23,9 +23,9 @@ end
 
 # ╔═╡ 06eed922-682f-4203-9f84-88b45e46b847
 begin
-	 svg_modality_eeg = "https://cloud.wirdreibei.de/s/XBwfRLsPs8CMJbQ/download/modality_eeg.svg" |> download|> Rsvg.handle_new_from_file
-	svg_modality_bold = "https://cloud.wirdreibei.de/s/cKcxZD9FgdR6GWG/download/modality_bold.svg" |> download|> Rsvg.handle_new_from_file
-	svg_modality_pupil = "https://cloud.wirdreibei.de/s/HRiwX96WNoPLRNm/download/modality_pupil.svg" |> download|> Rsvg.handle_new_from_file
+	 svg_modality_eeg = "https://cloud.wirdreibei.de/s/C86ccGj7a37ebDQ/download/modality_eeg.svg" |> download|> Rsvg.handle_new_from_file
+	svg_modality_bold = "https://cloud.wirdreibei.de/s/FaqEb6yrqk2dCoD/download/modality_bold.svg" |> download|> Rsvg.handle_new_from_file
+	svg_modality_pupil = "https://cloud.wirdreibei.de/s/N4SYzXC5x9SA4tJ/download/modality_pupil.svg" |> download|> Rsvg.handle_new_from_file
 	
 	    scatter(0.2,0,marker=svg_modality_eeg,markersize=100)
 	scatter!(0.3,0,marker=svg_modality_bold,markersize=100)
@@ -41,15 +41,14 @@ md"""
 ## EEG/ET / half-hanning
 """
 
-# ╔═╡ 06cff57f-baca-4d4f-83b2-770f78ae93a0
-#=╠═╡
-ax.xticklabelalign
-  ╠═╡ =#
+# ╔═╡ b7681be8-df2e-40ad-a3f8-c0506c15dde0
+ax = Axis(Figure())
 
-# ╔═╡ e684a87e-ddab-4184-8660-122f097427bb
-#=╠═╡
-ax.gri
-  ╠═╡ =#
+# ╔═╡ dbc062a6-d231-4d93-916a-8c863f9dc940
+cg = cgrad(:managua50,5;categorical=true)
+
+# ╔═╡ 06cff57f-baca-4d4f-83b2-770f78ae93a0
+
 
 # ╔═╡ 070d16c6-ad93-435e-82dc-db89e5669e29
 
@@ -80,11 +79,14 @@ p3dur = [.50,.80,1.10,1.40]*srate
 
 	y_plt = zeros(4,length(y))
 xvals= range(0,length(y)/srate,length(y))
-for k = 1:4
+
+	cs_eeg = cg[reverse(sortperm(p3dur))]
+
+for k = 4:-1:1
 	p3_end = p3_scale(p3dur[k])
 	y_plt[k,:] = copy(y)
 	y_plt[k,p3_stop-1+length(n1)-Int(p3_start_n1*srate):p3_stop-1+length(n1)-Int(p3_start_n1*srate)+-1+length(p3_end)] .+= p3_end
-	lines!(ax,xvals,y_plt[k,:])
+	lines!(ax,xvals,y_plt[k,:],color=cs_eeg[k])
 end
 
 resp_times = Int.([0.85,0.4,0.13,0.7,].*srate)
@@ -97,9 +99,9 @@ y = zeros(Int(2.1*srate))
 		r = y_plt[k,:]
 		t = resp_times[k]
 		y[t:t+length(r)-1] .+= r
-		lines!(ax2,xvals[t:t+length(r)-1],r,linestyle=:dash)
+		lines!(ax2,xvals[t:t+length(r)-1],r,linestyle=:dash,color=cs_eeg[k])
 	end
-	lines!(ax2,xvals,y)
+	lines!(ax2,xvals,y,color=:black)
 		ax2.xlabel = "time [s]"
 	ax2.ylabel = "ERP [µV]"
 	xlims!(ax2,[0,1.6])
@@ -143,13 +145,12 @@ begin
 		y[1+offset:offset+duration]  .= 1
 		return conv(y,fmri_resp(0,TR=0.5))
 	end
-	
-	
-	 [lines!(ax1,single_resp(sig_durations[k])) for k = 1:4]
+	cs = cg[sortperm(sig_durations)]
+	 [lines!(ax1,single_resp(sig_durations[k]),color=cs[k]) for k = 1:4]
 	xlims!(ax1,[0,75])
 	  lines!(ax2,y_conv[:,1],color=:black)
 		for k=1:4
-		lines!(ax2,single_resp(sig_durations[k];offset=sig_starts[k]),linestyle=:dash)
+		lines!(ax2,single_resp(sig_durations[k];offset=sig_starts[k]),linestyle=:dash,color=cs[k])
 		end
 	ax2.xlabel = "time [s]"
 	ax2.ylabel = "BOLD [a.u.]"
@@ -167,16 +168,18 @@ begin
 	function plot_pupil(ax,ax_cont)
 
 	co_all = zeros(400)
-	
+
+	cs = cg#[sortperm(sig_durations)]
+
 	for (i,n,tmax,tix) = zip([1,2,3,4],[7,8,11,14],[0.6,0.55,0.5,0.45],[53,165, 93,135,].-35)
-		lines!(ax, .-UnfoldSim.PuRF(;n=n,tmax=tmax,sfreq=100))
+		lines!(ax, .-UnfoldSim.PuRF(;n=n,tmax=tmax,sfreq=100),color=cs[i])
 		#lines!(ax,15 .+[0,0+tmax*100*0.5],[-0.02 - 0.05*i,-0.02 -0.05*i])
 		z = zeros(250)
 		z[tix] = 1
 		co = .-conv(UnfoldSim.PuRF(;n=n,tmax=tmax),z)
 	
 		co_all[1:300] .+= co[1:300]
-		lines!(ax_cont, range(0,length(co)/100,length=length(co)),co,linestyle=:dash)
+		lines!(ax_cont, range(0,length(co)/100,length=length(co)),co,linestyle=:dash,color=cs[i])
 		#lines!(ax_cont,0.15 .+[tix/100,tix/100+tmax*0.5],[-0.1,-0.1])
 	end
 	lines!(ax_cont, range(0,length(co_all)/100,length=length(co_all)),co_all,color=:black)
@@ -236,7 +239,7 @@ begin
 		#if mod !=3
 			ax_deco.xlabel = ""
 		#end
-		scatter!(ax_icon,0.,0.,marker=icon,markersize=150)
+		scatter!(ax_icon,0.,0.,marker=icon,markersize=110)
 
     Label(f[mod, 1,TopLeft()], labelstring,
         fontsize = 26,
@@ -252,16 +255,8 @@ begin
 	f
 end
 
-# ╔═╡ 67a6aaa9-fed0-4471-b040-e608acfe5a8e
-# ╠═╡ disabled = true
-#=╠═╡
-ax = Axis(Figure())
-  ╠═╡ =#
-
-# ╔═╡ b7681be8-df2e-40ad-a3f8-c0506c15dde0
-#=╠═╡
-ax = Axis(Figure())
-  ╠═╡ =#
+# ╔═╡ 2e4cf254-1856-4307-ac48-8127886a390a
+CairoMakie.save("/tmp/test.pdf",f)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2418,10 +2413,10 @@ version = "3.5.0+0"
 # ╠═5ea0de01-f99a-418d-870c-520d21edb047
 # ╟─701d191a-5458-4f7c-a89c-8686b0897a4d
 # ╠═b7681be8-df2e-40ad-a3f8-c0506c15dde0
+# ╠═2e4cf254-1856-4307-ac48-8127886a390a
+# ╠═dbc062a6-d231-4d93-916a-8c863f9dc940
 # ╠═06cff57f-baca-4d4f-83b2-770f78ae93a0
 # ╠═91026a0c-b330-45ea-9604-40f1e8b84538
-# ╠═67a6aaa9-fed0-4471-b040-e608acfe5a8e
-# ╠═e684a87e-ddab-4184-8660-122f097427bb
 # ╠═b480af95-c040-4b0c-b3ac-098e112c6cc3
 # ╠═070d16c6-ad93-435e-82dc-db89e5669e29
 # ╠═bc33acc3-3a15-4586-8862-dfc8f956b3c3
