@@ -14,8 +14,14 @@ end
 # ╔═╡ a6fb95f6-1ed0-480f-afb5-1cbf6ff6bb3c
 Pkg.add("DSP")
 
+# ╔═╡ 539f9993-1f89-4953-9fbf-4e07d40398b2
+Pkg.add("CairoMakie")
+
 # ╔═╡ 387e6752-5de1-4d46-931f-b5a2af62c0f9
 Pkg.add("CUDA")
+
+# ╔═╡ a8efb975-d8c7-4ed8-b0ef-736156097f91
+Pkg.add("Format")
 
 # ╔═╡ 6e6a5571-28f3-4e58-9118-24d015e8c87a
 using UnfoldBIDS
@@ -30,7 +36,7 @@ begin
 	using DataFrames
 	using FileIO
 	using CSV
-	using WGLMakie
+	using CairoMakie
 	using Unfold
 	using UnfoldMakie
 	using PythonCall
@@ -51,6 +57,9 @@ using UnfoldStats
 
 # ╔═╡ 83cb0942-f457-4924-af7c-dab196cad696
 using HypothesisTests
+
+# ╔═╡ ce3c30c5-fab5-4313-8dfd-562f95648d7e
+using Format
 
 # ╔═╡ 0ade7e1f-c3ab-46af-af23-fb4fbe939737
 using NaNStatistics
@@ -90,7 +99,7 @@ nilearn = pyimport("nilearn")
 nl = pyimport("nilearn.image")
 
 # ╔═╡ 6fa5d0cd-f88e-419f-9bd0-5e4ce0bb633a
-rootpath = "/store/data/2025_mumford_stroop_fMRI/stroop_data_share"
+rootpath = "/scratch/data/2025_mumford_stroop_fMRI/stroop_data_share"
 
 # ╔═╡ 7560df0e-78f1-4b97-b21e-f335dfb53bc7
 function to_df(all_paths)
@@ -304,7 +313,7 @@ begin
 		_ni = do_read_nifti(ix+offsetix)
 		_evts = do_read_tsv(ix+offsetix)
 		m_all_lin[ix] = do_fit(_ni,_evts,@formula(0~1+condition+response_time_centered))
-		m_all_nlin[ix] = do_fit(_ni,_evts,@formula(0~1+condition+ spl(response_time_centered,10)))
+		m_all_nlin[ix] = do_fit(_ni,_evts,@formula(0~1+condition+ spl(response_time_centered,5)))
 		catch
 			@info "error with subject-ix $(ix+offsetix)"
 		end
@@ -322,7 +331,7 @@ p_values_lin =
 
 coefs_nlin = extract_coefs(vcat(m_all_nlin[good_ix]...), :response_time_centered,Any)
 p_values_nlin =
-    mapslices(c -> pvalue(OneSampleHotellingT2Test(c', [0,0,0,0,0,0,0,0,0])), coefs_nlin, dims = (3, 4)) |>
+    mapslices(c -> pvalue(OneSampleHotellingT2Test(c', [0,0,0,0])), coefs_nlin, dims = (3, 4)) |>
     x -> dropdims(x, dims = (3, 4));
 
 end;
@@ -394,11 +403,17 @@ minimum(p_values_nlin)
 # ╔═╡ cb2949e8-5c35-4f22-bc72-d51e737a049a
 size(p_values_nlin)
 
+# ╔═╡ 86debf2e-06fd-4f5d-8a4b-c52e222adc08
+minimum(p_values_lin)
+
+# ╔═╡ f3ed2541-5d3b-43e4-b259-1af4ad27d2c5
+sortperm(p_values_nlin[:,10])
+
 # ╔═╡ e2ecc519-a871-4c27-809f-763e64c0cbce
 p_values_lin[20]
 
 # ╔═╡ a66402c0-55cb-439d-bac3-2969a852d2cd
-_effects_all = map(x->effects(Dict(:response_time_centered=>-1:0.2:2),x)|>x->subset(x,:channel => x->x.==18),m_all_nlin[good_ix]) #18
+_effects_all = map(x->effects(Dict(:response_time_centered=>-1:0.2:2),x)|>x->subset(x,:channel => x->x.==8),m_all_nlin[good_ix]) #18
 
 #20
 
@@ -410,7 +425,20 @@ _effects_all = map(x->effects(Dict(:response_time_centered=>-1:0.2:2),x)|>x->sub
 # ╔═╡ 57fcbd56-e051-410c-ae5d-a9dfb05a9d19
 begin
 _effects_avg = _effects_all[1]
-	_effects_avg.yhat .= mean.(winsor.(collect.(skipmissing.(eachrow(hcat([e.yhat for e in _effects_all]...)))),prop=0.1))
+_effects_avg.yhat .= mean.(winsor.(collect.(skipmissing.(eachrow(hcat([e.yhat for e in _effects_all]...)))),prop=0.1))
+
+
+_effects_all_lin= map(x->effects(Dict(:response_time_centered=>-1:0.2:2),x)|>x->subset(x,:channel => x->x.==18),m_all_lin[good_ix]) #18
+_effects_avg_lin = _effects_all_lin[1]
+_effects_avg_lin.yhat .= mean.(winsor.(collect.(skipmissing.(eachrow(hcat([e.yhat for e in _effects_all_lin]...)))),prop=0.1))
+
+_effects_avg_lin.group .= "linear"
+_effects_avg.group .= "non-linear"
+
+
+
+
+	
 end
 
 # ╔═╡ 109056bf-e3b4-4021-af03-3ff05643f99c
@@ -425,49 +453,69 @@ AoG.data(_effects_avg)*AoG.mapping(:response_time_centered,:yhat,color=:time,gro
 # ╔═╡ 8f40901a-d205-43c3-a8ea-eb5d143bf44d
 _effects_avg.time|>unique|>sort
 
+# ╔═╡ 0288d974-9912-4e2f-bd42-bad9f2243378
+let
+_effects_all = map(x->effects(Dict(:response_time_centered=>-1:0.2:2),x)|>x->subset(x,:channel => x->x.==8),m_all_nlin[good_ix]) #18
+	_effects_avg = _effects_all[1]
+_effects_avg.yhat .= mean.(winsor.(collect.(skipmissing.(eachrow(hcat([e.yhat for e in _effects_all]...)))),prop=0.1))
+	plot_erp(_effects_avg,mapping=(;color=:response_time_centered,group=:response_time_centered))
+end
+
+
+# ╔═╡ 289154e2-2776-4fb6-9dea-cf0eb8a9f959
+m_all_nlin[1]
+
 # ╔═╡ 3e897e59-cb21-48af-9002-ab7f35f3bb8b
 let
 	f = Figure()
-	highlightroi = [70]#[18,20,23] #[25,33,82]# sortperm(p_values_nlin,dims=1)[1:3]
-	clim = ((0.05/(100),0.05))
+
+	pval_config = (;yticks = [0.01,1e-11,0.05/100,0.05/(100*24)],ytickformat = values -> vcat(format(values[1]),"$(values[2])",["Bonf. R","Bonf. RxT"]))
+	highlightroi = [8]#[18,20,23] #[25,33,82]# sortperm(p_values_nlin,dims=1)[1:3]
+	clim = ((0.05/(100*24),0.05))
 	p_dat = (roi4_with_nlin_p)
-	options = (;axis=(;aspect=DataAspect()),colorrange=clim,colorscale=log10,colormap = Reverse(:reds),highclip=(:black,0.2),lowclip=:blue)
-	h1 = heatmap(f[1,1],nanminimum(p_dat,dims=3)[:,:,1];options...)
-	h2 = heatmap(f[1,2],nanminimum(p_dat,dims=2)[:,1,:];options...)
-	h3 = heatmap(f[2,1],nanminimum(p_dat,dims=1)[1,:,:];options...)
-	Colorbar(f[1,3],h1.plot,tellwidth=true,label="p-value")
+	options = (;axis=(;aspect=DataAspect()),colorrange=clim,colormap = Reverse(:reds),highclip=(:black,0.2),lowclip=(:black),colorscale=log10)
+	gbrain = f[1,1:3] = GridLayout()
+	h1 = heatmap(gbrain[1,1],nanminimum(p_dat,dims=3)[:,:,1];options...)
+	h2 = heatmap(gbrain[1,2],nanminimum(p_dat,dims=2)[:,1,:];options...)
+	h3 = heatmap(gbrain[1,3],nanminimum(p_dat,dims=1)[1,:,:];options...)
+	Colorbar(f[1,4],h1.plot,tellwidth=true,ticks=pval_config.yticks,tickformat = pval_config.ytickformat)
+
+	colsize!(gbrain,1,Relative(0.28))
+	colsize!(gbrain,2,Relative(0.35))
+	colgap!(gbrain, 0)
+	#colsize!(gbrain,1,Auto())
+	#colsize!(gbrain,2,Auto())
 	hidespines!.([h1.axis,h2.axis,h3.axis])
 	hidedecorations!.([h1.axis,h2.axis,h3.axis])
 
 	options = (;levels = 1,linewidth=3)
-	#ax_roi = Axis(f[2,2])
 	for (ix,roi) = enumerate(highlightroi)
 		c = cgrad(:Accent_4 ,4)[ix]
 		contour!(h1.axis,any(roi4.==roi,dims=3)[:,:,1];color=c,options...)
 		contour!(h2.axis,any(roi4.==roi,dims=2)[:,1,:];color=c,options...)
 		contour!(h3.axis,any(roi4.==roi,dims=1)[1,:,:];color=c,options...)
-
-		
-		#_,_eval_spline = my_eval_spl(roi)
-		
-		#_m = mean.(_eval_spline)./1000
-		
-		#_ci = 1.96 *std.(_eval_spline)./sqrt(50) ./1000
-		#band!(ax_roi,x_rt,_m.-_ci,_m.+_ci,color=(c,0.3))
-		#_h = lines!(ax_roi,x_rt,_m, color=c,linewidth=3, label=split(atlas_labels[roi,:name],'_')[end-1])
-		#translate!(_h,0,0,20)
-
 	end
-	plot_erp!(f[2,2:3],_effects_avg,mapping=(;color=:response_time_centered,group=:response_time_centered),axis=(;ylabel="BOLD [a.u]",xlabel="Time [s]"))
-	#ax_roi.xlabel = "Normalized, centered RT [σ]"
-	#ax_roi.ylabel = "centered activation [a.u]"
-	#Legend(f[2,3],ax_roi)
-	#hidespines!(ax_roi,:r,:t)
+	plot_erp!(f[2,2:4],vcat(_effects_avg,_effects_avg_lin),mapping=(;col=:group, color=:response_time_centered,group=:response_time_centered),colorbar  = (;label="Response Time Normalized [s.d.]",labelrotation=π/2),axis=(;ylabel="BOLD [a.u]",xlabel="Time [s]"))
+
+
+
+	
+	ax = Axis(f[2,1];yscale=log10,pval_config...)
+	_times = Unfold.times(m_all_nlin[1])[1]
+	h = series!(ax,_times,p_values_lin,solid_color=(:black,0.5),label="linear")
+	h2 = series!(ax,_times,p_values_nlin,solid_color=(:orange,0.5),label="non-linear")
+	hlines!([0.05/100, 0.05/(100*24)],color=:black,linestyle=:dash)
+	ax.xlabel="Time [s]"
+	#ax.ylabel="p-value"
+
+	hidespines!(ax,:r,:t)
+
+	for (p,l) in zip([f[1,1],f[2,1],f[2,2]],["A","B","C"])
+		Label(p[1,1,TopLeft()],l,font=:bold,padding=(0,0,5,0))
+	end
+	save("2025-06-12_fmri-figure-duration.svg",f)
 f
 end
-
-# ╔═╡ 289154e2-2776-4fb6-9dea-cf0eb8a9f959
-m_all_nlin[1]
 
 # ╔═╡ 291647f2-ddce-4655-9257-62f48c7de316
 let
@@ -508,6 +556,7 @@ end
 # ╠═6e6a5571-28f3-4e58-9118-24d015e8c87a
 # ╠═a6fb95f6-1ed0-480f-afb5-1cbf6ff6bb3c
 # ╠═8ac12029-c04f-457a-b85d-8e92a7771fdb
+# ╠═539f9993-1f89-4953-9fbf-4e07d40398b2
 # ╠═6f45836c-2030-11f0-2c2e-a3821d64a916
 # ╠═387e6752-5de1-4d46-931f-b5a2af62c0f9
 # ╠═8021cedb-64e8-4fe8-a609-8ee08eb0b503
@@ -550,6 +599,7 @@ end
 # ╠═a66402c0-55cb-439d-bac3-2969a852d2cd
 # ╠═57fcbd56-e051-410c-ae5d-a9dfb05a9d19
 # ╠═109056bf-e3b4-4021-af03-3ff05643f99c
+# ╠═0288d974-9912-4e2f-bd42-bad9f2243378
 # ╠═ed02ab26-73e4-44c2-99e6-2bebbad19e36
 # ╠═6f9b2c6b-477b-4593-a2c1-1ccf4dab42f1
 # ╠═8f40901a-d205-43c3-a8ea-eb5d143bf44d
@@ -559,6 +609,10 @@ end
 # ╠═e8ea0f12-c283-4f32-b8ee-2df2279a74e3
 # ╠═6988ca5e-d677-4a8f-9df3-fada317beadb
 # ╠═cb2949e8-5c35-4f22-bc72-d51e737a049a
+# ╠═86debf2e-06fd-4f5d-8a4b-c52e222adc08
+# ╠═ce3c30c5-fab5-4313-8dfd-562f95648d7e
+# ╠═f3ed2541-5d3b-43e4-b259-1af4ad27d2c5
+# ╠═a8efb975-d8c7-4ed8-b0ef-736156097f91
 # ╠═3e897e59-cb21-48af-9002-ab7f35f3bb8b
 # ╠═e2ecc519-a871-4c27-809f-763e64c0cbce
 # ╠═0ade7e1f-c3ab-46af-af23-fb4fbe939737
