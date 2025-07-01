@@ -23,6 +23,9 @@ Pkg.add("CUDA")
 # ╔═╡ a8efb975-d8c7-4ed8-b0ef-736156097f91
 Pkg.add("Format")
 
+# ╔═╡ ab225097-301d-4f2f-97a5-039dae0a9f72
+Pkg.add("MultipleTesting")
+
 # ╔═╡ 6e6a5571-28f3-4e58-9118-24d015e8c87a
 using UnfoldBIDS
 
@@ -60,6 +63,9 @@ using HypothesisTests
 
 # ╔═╡ ce3c30c5-fab5-4313-8dfd-562f95648d7e
 using Format
+
+# ╔═╡ 6cfecdc1-9555-42b7-bd19-601ca81954ba
+using MultipleTesting
 
 # ╔═╡ 0ade7e1f-c3ab-46af-af23-fb4fbe939737
 using NaNStatistics
@@ -174,9 +180,6 @@ ni = do_read_nifti(path_ix_nifti)
 _evts2 = do_read_tsv(1)
 
 
-# ╔═╡ 59e19266-7cba-47d9-a7f1-3e9776519f9e
-
-
 # ╔═╡ b77e5a08-eec9-4984-a971-68234137b32b
 ext = Base.get_extension(Unfold,:UnfoldBSplineKitExt)
 
@@ -205,6 +208,16 @@ end
 
 # ╔═╡ 7945f3af-c491-4eee-a461-54d7314ad0b6
 const AoG = UnfoldMakie.AlgebraOfGraphics
+
+# ╔═╡ 79a39f39-0b8d-48a9-95a6-60dfef6b01be
+begin
+	#p_dat_adj = fill(NaN,size(roi4_with_nlin_p))
+	#notnan = .!isnan.(roi4_with_nlin_p)
+	#p_dat_adj[notnan] .= adjust(vec(roi4_with_nlin_p[notnan]), BenjaminiYekutieli())
+end
+
+# ╔═╡ 7e369e59-107c-44cf-a32b-5006d4af3e42
+
 
 # ╔═╡ 9f896b11-f7ef-44ed-b9e1-191783ef86a0
 
@@ -382,17 +395,34 @@ end
 # ╠═╡ show_logs = false
 
 begin
-	roi4_with_nlin_p = similar(roi4)
-	roi4_with_nlin_p .= NaN
-	roi4_with_lin_p = similar(roi4)
-	roi4_with_lin_p .= NaN
+	roi4_with_nlin_q = similar(roi4)
+	roi4_with_nlin_q .= NaN
+	roi4_with_lin_q = similar(roi4)
+	roi4_with_lin_q .= NaN
+
+	roi4_with_lin_p = deepcopy(roi4_with_lin_q)
+	roi4_with_nlin_p = deepcopy(roi4_with_nlin_q)
+	
+	q_values_nlin = adjust(vec(p_values_nlin),MultipleTesting.BenjaminiYekutieli())
+	q_values_lin = adjust(vec(p_values_lin),MultipleTesting.BenjaminiYekutieli())
+
+	q_values_nlin = reshape(q_values_nlin,size(p_values_nlin))
+	q_values_lin = reshape(q_values_lin,size(p_values_lin))
 	for r in 1:100
 		_ix = roi4 .== r
-		roi4_with_nlin_p[_ix] .= p_values_nlin[r,10]
-		roi4_with_lin_p[_ix] .= p_values_lin[r,10]
+		roi4_with_nlin_q[_ix] .= minimum(q_values_nlin[r,:])
+		roi4_with_lin_q[_ix] .= minimum(q_values_lin[r,:])
+		roi4_with_nlin_p[_ix] .= minimum(p_values_nlin[r,:])
+		roi4_with_lin_p[_ix] .= minimum(p_values_lin[r,:])
 
 	end
 end	
+
+# ╔═╡ 59e19266-7cba-47d9-a7f1-3e9776519f9e
+heatmap(q_values_nlin')
+
+# ╔═╡ f5293404-7428-42f2-a6de-620f277f8d7c
+findall(q_values_nlin.<0.05)
 
 # ╔═╡ 9099f03a-aa0d-41c6-a930-d42f94610b32
 sortperm(p_values_nlin[:,10])
@@ -468,16 +498,16 @@ m_all_nlin[1]
 # ╔═╡ 3e897e59-cb21-48af-9002-ab7f35f3bb8b
 let
 	f = Figure()
-
-	pval_config = (;yticks = [0.01,1e-11,0.05/100,0.05/(100*24)],ytickformat = values -> vcat(format(values[1]),"$(values[2])",["Bonf. R","Bonf. RxT"]))
-	highlightroi = [8]#[18,20,23] #[25,33,82]# sortperm(p_values_nlin,dims=1)[1:3]
-	clim = ((0.05/(100*24),0.05))
-	p_dat = (roi4_with_nlin_p)
-	options = (;axis=(;aspect=DataAspect()),colorrange=clim,colormap = Reverse(:reds),highclip=(:black,0.2),lowclip=(:black),colorscale=log10)
+	p_dat_adj = roi4_with_nlin_p
+	pval_config = (;yticks = [0.001,0.0001,0.00001, 0.05/(100*24),1e-11],ytickformat = values -> #vcat(format(values[1]),format(values[2]),format(values[3]),"Bonf.",L"10^{-11}")
+		vcat(L"10^{-3}",L"10^{-4}",L"10^{-5}" ,L"Bonf.",L"10^{-11}"))
+	highlightroi = [8,18,20]#[18,20,23] #[25,33,82]# sortperm(p_values_nlin,dims=1)[1:3]
+	clim = ((0.00001,0.001))
+	options = (;axis=(;aspect=DataAspect()),colorrange=clim,colormap = Reverse(:reds),highclip=(:black,0.2),colorscale=log10)
 	gbrain = f[1,1:3] = GridLayout()
-	h1 = heatmap(gbrain[1,1],nanminimum(p_dat,dims=3)[:,:,1];options...)
-	h2 = heatmap(gbrain[1,2],nanminimum(p_dat,dims=2)[:,1,:];options...)
-	h3 = heatmap(gbrain[1,3],nanminimum(p_dat,dims=1)[1,:,:];options...)
+	h1 = heatmap(gbrain[1,1],nanminimum(p_dat_adj,dims=3)[:,:,1];options...)
+	h2 = heatmap(gbrain[1,2],nanminimum(p_dat_adj,dims=2)[:,1,:];options...)
+	h3 = heatmap(gbrain[1,3],nanminimum(p_dat_adj,dims=1)[1,:,:];options...)
 	Colorbar(f[1,4],h1.plot,tellwidth=true,ticks=pval_config.yticks,tickformat = pval_config.ytickformat)
 
 	colsize!(gbrain,1,Relative(0.28))
@@ -490,7 +520,11 @@ let
 
 	options = (;levels = 1,linewidth=3)
 	for (ix,roi) = enumerate(highlightroi)
-		c = cgrad(:Accent_4 ,4)[ix]
+		#c = cgrad(:Accent_4 ,4)[ix]
+		c = (:black,0.5)
+		if roi == 8
+			c = (:gray,0.8)
+		end
 		contour!(h1.axis,any(roi4.==roi,dims=3)[:,:,1];color=c,options...)
 		contour!(h2.axis,any(roi4.==roi,dims=2)[:,1,:];color=c,options...)
 		contour!(h3.axis,any(roi4.==roi,dims=1)[1,:,:];color=c,options...)
@@ -504,16 +538,16 @@ let
 	_times = Unfold.times(m_all_nlin[1])[1]
 	h = series!(ax,_times,p_values_lin,solid_color=(:black,0.5),label="linear")
 	h2 = series!(ax,_times,p_values_nlin,solid_color=(:orange,0.5),label="non-linear")
-	hlines!([0.05/100, 0.05/(100*24)],color=:black,linestyle=:dash)
+	hlines!([0.05/(100*24)],color=:black,linestyle=:dash)
 	ax.xlabel="Time [s]"
-	#ax.ylabel="p-value"
+	ax.ylabel="p-value (uncorrected)"
 
 	hidespines!(ax,:r,:t)
 
 	for (p,l) in zip([f[1,1],f[2,1],f[2,2]],["A","B","C"])
 		Label(p[1,1,TopLeft()],l,font=:bold,padding=(0,0,5,0))
 	end
-	save("2025-06-12_fmri-figure-duration.svg",f)
+	save("2025-06-25_fmri-figure-duration.svg",f)
 f
 end
 
@@ -613,7 +647,12 @@ end
 # ╠═ce3c30c5-fab5-4313-8dfd-562f95648d7e
 # ╠═f3ed2541-5d3b-43e4-b259-1af4ad27d2c5
 # ╠═a8efb975-d8c7-4ed8-b0ef-736156097f91
+# ╠═f5293404-7428-42f2-a6de-620f277f8d7c
 # ╠═3e897e59-cb21-48af-9002-ab7f35f3bb8b
+# ╠═79a39f39-0b8d-48a9-95a6-60dfef6b01be
+# ╠═7e369e59-107c-44cf-a32b-5006d4af3e42
+# ╠═6cfecdc1-9555-42b7-bd19-601ca81954ba
+# ╠═ab225097-301d-4f2f-97a5-039dae0a9f72
 # ╠═e2ecc519-a871-4c27-809f-763e64c0cbce
 # ╠═0ade7e1f-c3ab-46af-af23-fb4fbe939737
 # ╠═9f896b11-f7ef-44ed-b9e1-191783ef86a0
