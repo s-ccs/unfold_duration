@@ -8,7 +8,7 @@ Project investigating whether duration and overlap can be modelled simultaneousl
 - src: All code used in the project
   - Simulations: matlab code used for the main simulations. Dependencies can be found in /lib, src/helper, and src/functions
   - Fixation_durations_WildLab: Code used for he FRP data analysis
-  - PlutoNB: (Julia) Pluto notebooks for data plotting and fRMI analysis
+  - PlutoNB: (Julia) Pluto notebooks for data plotting and fMRI analysis
 - typst-paper2: Typst project for manuscript
 - lib: dependencies (toolboxes) for the matlab simulation code
 
