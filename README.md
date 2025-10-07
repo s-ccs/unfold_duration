@@ -20,14 +20,18 @@ To reproduce figures of the simulations you will first have to run the [run_simu
 
 Below you can find a table indicating which script/ notebook to use to produce certain figures. All figures can also be found as vector data in /Figures
 
-| Figure | Script to produce figure | Comment
+## Quick note on notebooks
+
+Please be aware that the notebooks used in this project are [Pluto.jl notebooks](https://plutojl.org/) within the Julia language. You can follow the installation instructions on [https://plutojl.org/](https://plutojl.org/#install) in order to use these.
+
+| Figure | Script/ Notebook to produce figure | Comment
 |-|-|-|
-|Figure 1 | [2024-nb_figure1.jl](https://github.com/s-ccs/unfold_duration/blob/master/src/PlutoNB/2024-nb_figure1.jl) | |
-|Figure 2 | [2024-nb_figure2.jl](https://github.com/s-ccs/unfold_duration/blob/master/src/PlutoNB/2024-nb_figure2.jl) | |
+|Figure 1 | [2024-nb_figure1.jl](https://github.com/s-ccs/unfold_duration/blob/master/src/PlutoNB/2024-nb_figure1.jl) | Pluto.jl notebook |
+|Figure 2 | [2024-nb_figure2.jl](https://github.com/s-ccs/unfold_duration/blob/master/src/PlutoNB/2024-nb_figure2.jl) | Pluto.jl notebook |
 |Figure 3 | [plot_paper.m](https://github.com/s-ccs/unfold_duration/blob/master/src/Simulations/plot_paper.m) | Figure was changed subsequently in adobe |
 |Figure 4 | [analysis_sim.m](https://github.com/s-ccs/unfold_duration/blob/master/src/Simulations/analysis_sim.m) | Use the code after section %% Load data |
-|Figure 5 | [SimResultsStatsPlots_Paper.jl](https://github.com/s-ccs/unfold_duration/blob/master/src/PlutoNB/SimResultsStatsPlots_Paper.jl) | |
-|Figure 6 | [SimResultsStatsPlots_Paper.jl](https://github.com/s-ccs/unfold_duration/blob/master/src/PlutoNB/SimResultsStatsPlots_Paper.jl) | |
-|Figure 7 | [20240613_SimResults_Plots_BlockVsNoblock.jl](https://github.com/s-ccs/unfold_duration/blob/master/src/PlutoNB/20240613_SimResults_Plots_BlockVsNoblock.jl) | |
-|Figure 8 | [nb_2024-02-15_wildlab-frp-duration-overlap.jl](https://github.com/s-ccs/unfold_duration/blob/master/nb_2024-02-15_wildlab-frp-duration-overlap.jl) | |
-|Figure 9 | [2025-05-30_fmriStroop-FIR.jl](https://github.com/s-ccs/unfold_duration/blob/master/src/PlutoNB/2025-05-30_fmriStroop-FIR.jl) | |
+|Figure 5 | [SimResultsStatsPlots_Paper.jl](https://github.com/s-ccs/unfold_duration/blob/master/src/PlutoNB/SimResultsStatsPlots_Paper.jl) | Pluto.jl notebook |
+|Figure 6 | [SimResultsStatsPlots_Paper.jl](https://github.com/s-ccs/unfold_duration/blob/master/src/PlutoNB/SimResultsStatsPlots_Paper.jl) | Pluto.jl notebook |
+|Figure 7 | [20240613_SimResults_Plots_BlockVsNoblock.jl](https://github.com/s-ccs/unfold_duration/blob/master/src/PlutoNB/20240613_SimResults_Plots_BlockVsNoblock.jl) | Pluto.jl notebook |
+|Figure 8 | [nb_2024-02-15_wildlab-frp-duration-overlap.jl](https://github.com/s-ccs/unfold_duration/blob/master/nb_2024-02-15_wildlab-frp-duration-overlap.jl) | Pluto.jl notebook |
+|Figure 9 | [2025-05-30_fmriStroop-FIR.jl](https://github.com/s-ccs/unfold_duration/blob/master/src/PlutoNB/2025-05-30_fmriStroop-FIR.jl) | Pluto.jl notebook |
