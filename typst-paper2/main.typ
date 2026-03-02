@@ -4,6 +4,7 @@
 #import "@preview/equate:0.2.1": equate
 #import "@preview/wrap-it:0.1.0": wrap-content
 #import "@preview/muchpdf:0.1.1": muchpdf
+#import "@preview/headcount:0.1.0": *
 
 #set page(paper: "a4", margin: (left: 10mm, right: 10mm, top: 12mm, bottom: 15mm))
 #set par.line(numbering: n => text(size: 6pt)[#n])
@@ -43,12 +44,63 @@ While in this paper we focus on EEG analyses, #text()[we additionally show that 
 
 // Add for review
 #let rev(body) = text()[#body] // default luma
+#let rev2(body) = text()[#body] // default luma
+
+// Supplemental file definition
+#let supplemental(body) = {
+  counter(heading).update(0)
+  //counter(figure).update(0)
+  counter("supplemental").update(1)
+  state("supplemental").update(true)
+
+  set figure(numbering: "S.1")
+  show heading: reset-counter(counter(figure.where(kind: image)))
+  
+  set heading(
+    numbering: (..nums) => {
+      let vals = nums.pos()
+      let value = "ABCDEFGHIJ".at(vals.at(0) - 1)
+      if vals.len() == 1 {
+        return "Supplemental File " + value
+      }
+      else {
+        return value + "." + nums.pos().slice(1).map(str).join(".")
+      }
+    }
+  );
+  [#pagebreak() #body]
+}
 
 // set spellcheck language
 #set text(lang: "en", region: "US")
 
 // figure caption alighment
 #show figure.caption: set align(left)
+/*
+#set figure(numbering: it => {
+      //workaround...
+      let appx = state("supplemental", false).get()
+      let alph = "S"
+      let hdr = counter(heading).get().at(0)
+      if appx [#alph.at(hdr - 1).#it]
+      else [#it]
+    }
+)
+
+
+#set figure(numbering: n => {
+  let appx = state("supplemental", false).get()
+  let hdr = counter(heading).get()
+  let format = if appx {
+    "S.1."
+  } else {
+    "1"
+  }
+  // Replace 'hdr.first()' by '..hdr' to display
+  // all heading levels
+  numbering(format, n)
+})
+*/
 
 //#elements.float(align: bottom, [\*Corresponding author]) 
 #set figure(gap: 0.5em) /* Gap between figure and caption */
@@ -71,7 +123,7 @@ Neural activity is rarely interpretable without removing unwanted noise through 
 In human EEG, the result of such averaging is known as the event-related potential (ERP) and has been studied for more than 80 years @davis_1936. While in this article we primarily focus on such ERPs, we additionally demonstrate that our findings generalize to other event-related time series #rev[on the example of an fMRI dataset.]
 
 #figure(
-    image("assets/2024-08-07_figu1.svg"),
+    image("assets/2025-10-16_figu1.svg"),
     caption: [Exemplary duration effects in different modalities. Simulations following published effects (Pupil: #cite(<snowden.etal_2016>, form: "prose"), BOLD: #cite(<glover_1999>, form: "prose"), FRP: this paper). A) normalized pupil response to varying stimulus durations. B) BOLD response to different block durations of finger tapping. C) FRP responses to fixations of varying durations.])<Fig1>
 
 A helpful example to illustrate the process of calculating an ERP can be found in its application to a classical P300 experiment, commonly known as an active oddball experiment. Here, subjects respond whether they see a rare “target” stimulus, or a frequent “distractor” stimulus (@Problem\.A). Typically, the signal of interest is the time-locked activity to the stimulus and, in some analyses, to the button press as well @jung.etal_1999. #rev[After averaging several trials, a difference in the P300 between target and distractor stimuli manifests at around 350ms after the stimulus onset @kappenman.etal_2021 @luck_2014.] While single-trial analyses exist, particularly in brain-computer interfaces, the averaging step has been pivotal to the development of ERP research.
@@ -85,7 +137,7 @@ Varying event durations likely reflect one such trial-wise influence #rev[(@Prob
 Especially the latter is a strong candidate for potential confounds, as stimulus processing times can be decoded from many brain areas using fMRI @nakuci.etal_2024, but more importantly, typically differ between conditions @gilbert.sigman_2007 @lange.roder_2006, and populations @der.deary_2006 (see @Problem\.C for different reaction times between conditions in an oddball experiment). Processing times also naturally differ for fixation durations, e.g. in unrestricted viewing @nuthmann_2017, or for certain stimuli, e.g. faces, which are typically fixated longer than other objects @gert.etal_2022.
 
 Indeed, previous studies by #cite(<wang.etal_2018>, form: "prose"), #cite(<hassall.etal_2022>, form: "prose"), #cite(<yarkoni.etal_2009>, form: "prose"), #cite(<groen.etal_2022>, form: "prose"), #cite(<brands.etal_2024>, form: "prose") & #cite(<mumford.etal_2023a>, form: "prose") have shown the importance to regard duration as a potential confounder in single-neuron activity, in EEG, iEEG and also fMRI. 
-#cite(<wang.etal_2018>, form: "prose") recorded single-neuron activity from the medial frontal cortex in non-human primates, which performed a task to produce intervals of motor activity (i.e. a hand movement towards a stimulus) of different lengths. Through this, they showed that neural activity temporally scaled with interval length. Building on this research, #cite(<hassall.etal_2022>, form: "prose") extended the idea of temporally scaled signals to human cognition. By using a general linear model containing fixed- and variable-duration regressors, they successfully unmixed fixed- and scaled-time components in human EEG data. Furthermore, #cite(<sun.etal_2024>, form: "prose") recently expressed concerns about reaction time, a prominent example of event duration, as an important confounding variable in response-locked ERPs. #rev[Adding to this, #cite(<yarkoni.etal_2009>, form: "prose") and #cite(<mumford.etal_2023a>, form: "prose") emphasized the importance of considering reaction time in fMRI time series modeling, showing that a reaction time effect can be found over a wide area of brain regions in multiple tasks. Further, modelling duration effects in EEG could allow to include the within-subject effect in subsequent fMRI analyses as proposed by #cite(<philiastides.sajda_2007>, form: "prose"). In their work, they identified components in EEG data of participants doing a decision-making task. //The effect size of these components was directly related to different coherence (i.e. difficulty) levels of the task.
+#cite(<wang.etal_2018>, form: "prose") recorded single-neuron activity from the medial frontal cortex in non-human primates, which performed a task to produce intervals of motor activity (i.e. a hand movement towards a stimulus) of different lengths. Through this, they showed that neural activity temporally scaled with interval length. Building on this research, #cite(<hassall.etal_2022>, form: "prose") extended the idea of temporally scaled signals to human cognition. By using a general linear model containing fixed- and variable-duration regressors, they successfully unmixed fixed- and scaled-time components in human EEG data. Furthermore, #cite(<sun.etal_2024>, form: "prose") recently expressed concerns about reaction time, a prominent example of event duration, as an important confounding variable in response-locked ERPs. #rev[Adding to this, #cite(<yarkoni.etal_2009>, form: "prose") and #cite(<mumford.etal_2023a>, form: "prose") emphasized the importance of considering reaction time in fMRI time series modeling, showing that a reaction time effect can be found over a wide area of brain regions in multiple tasks. Further, modeling duration effects in EEG could allow to include the within-subject effect in subsequent fMRI analyses as proposed by #cite(<philiastides.sajda_2007>, form: "prose"). In their work, they identified components in EEG data of participants doing a decision-making task. //The effect size of these components was directly related to different coherence (i.e. difficulty) levels of the task.
 Using this information as regressors in the analysis of fMRI data, they received better estimate of the spatiotemporal effect of decision making.
 In summary, these studies highlight the increasing importance of considering event duration as a crucial factor in neural and cognitive research. And indeed, researchers have explicitly started to include event duration as a predictor in their models @nikolaev.etal_2023.]
 
@@ -93,7 +145,7 @@ As mentioned above, one promising solution to address trial-wise influences thro
 
 == Overlapping Events
 
-Having a method to tackle the duration problem still leaves us with the issue of temporal overlap between adjacent events, however. #rev[For instance, during an active oddball task, participants are asked to react with the press of a button to a row of different stimuli. Importantly, one rarely occurring stimulus is the designated target (i.e. the oddball; frequently occurring "non-oddball" stimuli are referred to as distractors) where participants have to react by use of a different button (@Problem\.A). Because participants' responses to distractors occurs (for distractor targets) on average at about 430ms after stimulus onset, while a typical stimulus ERP lasts for longer than 600ms, the ERPs of stimuli and response will necessarily overlap with each other (@Problem\.B-C).] Prior research has shown that such overlap, can be addressed within the same regression framework that is used to solve the covariate problem, by using linear #rev[overlap correction] @ehinger.dimigen_2019 @smith.kutas_2015a. This approach has been successfully applied to several experiments, with application to free viewing tasks (e.g. #cite(<coco.etal_2020>, form: "author"), #cite(<coco.etal_2020>, form: "year") @gert.etal_2022 @nikolaev.etal_2023 @welke.vessel_2022), language modeling @momenian.etal_2024, auditory modeling @skerritt-davis.elhilali_2018 and many other fields.
+Having a method to tackle the duration problem still leaves us with the longstanding issue of temporal overlap between adjacent events, however. #rev[For instance, during an active oddball task, participants are asked to react with the press of a button to a row of different stimuli. Importantly, one rarely occurring stimulus is the designated target (i.e. the oddball; frequently occurring "non-oddball" stimuli are referred to as distractors) where participants have to react by use of a different button (@Problem\.A). Because participants' responses to distractors occurs (for distractor targets) on average at about 430ms after stimulus onset, while a typical stimulus ERP lasts for longer than 600ms, the ERPs of stimuli and response will necessarily overlap with each other (@Problem\.B-C).] Prior research has shown that such overlap, can be addressed within the same regression framework that is used to solve the covariate problem, by using linear #rev[overlap correction] @ehinger.dimigen_2019 @smith.kutas_2015a. #rev2[This approach, dating back at least to #cite(<woodyCharacterizationAdaptiveFilter1967>, form: "prose"),] has been successfully  applied to several experiments, with application to free viewing tasks (e.g. #cite(<coco.etal_2020>, form: "author"), #cite(<coco.etal_2020>, form: "year") @gert.etal_2022 @nikolaev.etal_2023 @welke.vessel_2022), language modeling @momenian.etal_2024, auditory modeling @skerritt-davis.elhilali_2018 and many other fields.
 
 Yet, this leaves us with a conundrum: the linear #rev[overlap correction] works due to the varying-event timing, but the varying-event timing also relates to the duration effect. Therefore, it is not at all clear whether these two factors, overlap and varying event duration, can, should, or even need to be modeled concurrently.
 
@@ -130,7 +182,7 @@ Additionally, ERPs were grouped together into blocks, each block containing acti
 
 === Noise
 
-Subsequently, for a single simulation #rev[we produced real EEG noise by randomly selecting a minimally pre-processed closed eyes resting-state recording from one of 64 channels of one of 11 participants of a previously recorded study] (#cite(<skukies_2020>, form: "author"), #cite(<skukies_2020>, form: "year")\, the data can be obtained from #cite(<ds005620:1.0.0>, form: "author"), #cite(<ds005620:1.0.0>, form: "year")\; for specifics on the preprocessing see appendix @NoiseAp\; see @Methods\.C for simulated data with added noise). #rev[We choose to use eyes-closed instead of eyes-open to not introduce additional eye movement and/ or blink artifacts into the data, which would have required further preprocessing, for example with ICA.] Additionally, since the recordings tended to be shorter than the simulation, recordings were artificially prolonged by repeating the chosen recording until it matched the length of the simulation. After adding the noise, the data (i.e simulated data + noise) were FIR filtered at a -\6db cut-off frequency of 0.5Hz #rev[. We filtered the data because in the overlap condition we saw a steady-state DC offset, a result from our positive-only proto-ERPs. While our deconvolution models successfully removed these offsets, the traditional averaging analysis does not. But such a large DC offset strongly influences the MSE compared to the "true" proto-ERP shape. Filtering removes this offset, but is conservative as it biases in favour of the classical averaging analysis]. All simulations were repeated without noise as well, however since the main results did not change, we do not further discuss them here (see appendix @NoNoiseAp for results without noise). Based on experience and the fact that we only minimally process the noise recordings, we judge the noise level to be realistic, and rather on a more noisy level (i.e. low SNR). Additionally, it should be remarked that our simulations pertain #rev[to the results of] a single subject #rev[analysis], but our free-viewing example results #rev[(see @RealData)] are based on a group of subjects, greatly increasing the SNR #rev[by aggregating results over subjects].
+Subsequently, for a single simulation #rev[we produced real EEG noise by randomly selecting a minimally pre-processed closed eyes resting-state recording from one of 64 channels of one of 11 participants of a previously recorded study] (#cite(<skukies_2020>, form: "author"), #cite(<skukies_2020>, form: "year")\, the data can be obtained from #cite(<ds005620:1.0.0>, form: "author"), #cite(<ds005620:1.0.0>, form: "year")\; for specifics on the preprocessing see Supplemental File @NoiseAp\; see @Methods\.C for simulated data with added noise). #rev[We choose to use eyes-closed instead of eyes-open to not introduce additional eye movement and/ or blink artifacts into the data, which would have required further preprocessing, for example with ICA.] Additionally, since the recordings tended to be shorter than the simulation, recordings were artificially prolonged by repeating the chosen recording until it matched the length of the simulation. After adding the noise, the data (i.e simulated data + noise) were FIR filtered at a -\6db cut-off frequency of 0.5Hz #rev[. We filtered the data because in the overlap condition we saw a steady-state DC offset, a result from our positive-only proto-ERPs. While our deconvolution models successfully removed these offsets, the traditional averaging analysis does not. But such a large DC offset strongly influences the MSE compared to the "true" proto-ERP shape. Filtering removes this offset, but is conservative as it biases in favour of the classical averaging analysis]. All simulations were repeated without noise as well, however since the main results did not change, we do not further discuss them here (see Supplemental File @NoNoiseAp for results without noise). Based on experience and the fact that we only minimally process the noise recordings, we judge the noise level to be realistic, and rather on a more noisy level (i.e. low SNR). Additionally, it should be remarked that our simulations pertain #rev[to the results of] a single subject #rev[analysis], but our free-viewing example results #rev[(see @RealData)] are based on a group of subjects, greatly increasing the SNR #rev[by aggregating results over subjects].
 
 === Analysis
 
@@ -162,7 +214,7 @@ In @Quali, we show a representative analysis of one such simulation, using the s
 
 #figure(
   image("assets/20241127QualiResultsScaledHanning.svg", width: 100%),
-  caption: [Results from a single simulation for the four tested models (including duration as: linear, categorical, 5-spline, 10-spline variable) combined with (bottom row) and without (top row) overlap correction. #rev[In this single simulation a combination of overlap correction and duration-modeling through 10-splines results in the best estimation of the ground truth(bottom row, right most panel).] Left panel = ground truth. Simulation parameters: shape = scaled hanning; duration simulated = true; distribution = half-normal; noise = true; overlap = true],
+  caption: [Results from a single simulation for the four tested models (including duration as: linear, categorical, 5-spline, 10-spline variable) combined with (bottom row) and without (top row) overlap correction. #rev[In this single simulation a combination of overlap correction and duration-modeling through 10-splines results in the best estimation of the ground truth(bottom row, right most panel).] Left panel = ground truth. Simulation parameters: shape = scaled hanning; duration simulated = true; distribution = half-normal; noise = true; overlap = true. #rev2[For a similar figure where model results are superimposed onto each other please see Supplemental File @alt]],
 ) <Quali>
 
 However, it is important to keep in mind that this is only a single simulation. To generalize and quantify these potential effects, we calculated the mean squared error (MSE) between each analysis method's predictions and the ground truth for 15 different event durations. All resulting MSE values are finally normalized to the results of fitting only a single ERP to all events (Wilkinson notation: $y ~ 1$), that is, modeling no duration effect at all (@MainResults).
@@ -192,11 +244,11 @@ Additionally, even in cases where ERPs overlap and we would wrongly assume an ef
 
 === Can we model Overlap via Duration Effects?
 
-#rev[As a last check, we wanted to test a proposition by #cite(<nikolaev.etal_2016>, form: "prose") and #cite(<vanhumbeeck.etal_2018>, form: "prose") in that overlap effects can be accounted for using only non-linear splines for the duration predictor. Their idea is that, because the overlap is a direct result of the duration of a trial, by keeping the effect of duration constant in the presentation of the results, one effectively adjusts for the overlap effect as well, without ever explicitly modelling overlap. However, the authors never tested this assumption through simulations.] As visible in @Quali (compare overlap-corrected and not overlap-corrected), this seems to be insufficient. We tested whether one can use durations to model the overlap more systematically (depicted in the appendix @DurModVSOC), and in fact, in our simulations, a model without any overlap correction or duration modeling #rev[(i.e. taking the average; Wilcoxon formula: $y ~ 1$)] even outperforms modeling overlap via duration. This shows us that we indeed have to, and can, rely on other techniques like linear #rev[overlap correction], as proposed in this study.
+#rev[As a last check, we wanted to test a proposition by #cite(<nikolaev.etal_2016>, form: "prose") and #cite(<vanhumbeeck.etal_2018>, form: "prose") in that overlap effects can be accounted for using only non-linear splines for the duration predictor. Their idea is that, because the overlap is a direct result of the duration of a trial, by keeping the effect of duration constant in the presentation of the results, one effectively adjusts for the overlap effect as well, without ever explicitly modeling overlap. However, the authors never tested this assumption through simulations.] As visible in @Quali (compare overlap-corrected and not overlap-corrected), this seems to be insufficient. We tested whether one can use durations to model the overlap more systematically (depicted in the Supplemental File @DurModVSOC), and in fact, in our simulations, a model without any overlap correction or duration modeling #rev[(i.e. taking the average; Wilcoxon formula: $y ~ 1$)] even outperforms modeling overlap via duration. This shows us that we indeed have to, and can, rely on other techniques like linear #rev[overlap correction], as proposed in this study.
 
 === Interaction of Filter and #rev[Overlap Correction]
 
-We noticed an interaction between our use of a high-pass filter and the linear #rev[overlap correction], resulting in a DC-offset in the overlap-corrected estimates. This is visible in @Quali (the offset in the baseline period in the overlap-corrected results), and becomes more apparent when we compare non-standardized MSE values with and without overlap correction for the intercept-only model (see appendix @DurModVSOC). Given that we know overlap correction works in the overlap simulated, but no duration effect simulated case, we would have expected overlap-corrected models to perform much better (expressed by lower MSE values) than not overlap-corrected models. And in fact, once we corrected for the baseline offset, MSE values for overlap-corrected results showed exactly this improvement (notice how MSE values improve in the first two figures in appendix @BSL when compared with @MainResults\.C and @DistResults, and compare MSE values for the intercept-only models in appendix @DurModVSOC and the third figure of appendix @BSL). However, not filtering would have resulted in strong baseline problems in the non-overlap corrected mass univariate case. We decided to present the results in the main part of our paper without any baseline correction, as this is the more conservative case, since a baseline correction would further bias results against the mass-univariate models. Moreover, it is not entirely clear whether or how baseline correction should be done in the first place, especially given that in overlap paradigms there often is no "activity-free" baseline period (for the latter see #cite(<nikolaev.etal_2016>, form: "author"), #cite(<nikolaev.etal_2016>, form: "year"), and #cite(<alday_2019>, form: "author"), #cite(<alday_2019>, form: "year")).
+We noticed an interaction between our use of a high-pass filter and the linear #rev[overlap correction], resulting in a DC-offset in the overlap-corrected estimates. This is visible in @Quali (the offset in the baseline period in the overlap-corrected results), and becomes more apparent when we compare non-standardized MSE values with and without overlap correction for the intercept-only model (see Supplemental File @DurModVSOC). Given that we know overlap correction works in the overlap simulated, but no duration effect simulated case, we would have expected overlap-corrected models to perform much better (expressed by lower MSE values) than not overlap-corrected models. And in fact, once we corrected for the baseline offset, MSE values for overlap-corrected results showed exactly this improvement (notice how MSE values improve in the first two figures in Supplemental File @BSL when compared with @MainResults\.C and @DistResults, and compare MSE values for the intercept-only models in Supplemental File @DurModVSOC and the third figure of Supplemental File @BSL). However, not filtering would have resulted in strong baseline problems in the non-overlap corrected mass univariate case. We decided to present the results in the main part of our paper without any baseline correction, as this is the more conservative case, since a baseline correction would further bias results against the mass-univariate models. Moreover, it is not entirely clear whether or how baseline correction should be done in the first place, especially given that in overlap paradigms there often is no "activity-free" baseline period (for the latter see #cite(<nikolaev.etal_2016>, form: "author"), #cite(<nikolaev.etal_2016>, form: "year"), and #cite(<alday_2019>, form: "author"), #cite(<alday_2019>, form: "year")).
 
 At this point, we cannot say for certain where this interaction stems from, however, conducting a thorough investigation of this phenomenon is out of the scope of this paper.
 
@@ -274,12 +326,13 @@ To showcase that our approach generalizes to modalities other than EEG, we reana
 
 == Methods
 
-The dataset consists of 110 subjects completing a Stroop task @stroop_1935. During the Stroop task, participants are asked to name the font color of stimuli that are either congruent (e.g. the word green written with the font color green) or incongruent (e.g. the word green written in the font color red). Participants were presented with 96 trials and exhibited a mean reaction time of \~0.691 seconds. Further details can be obtained by contacting the authors of #cite(<mumford.etal_2023a>, form: "prose"). fMRI signals were acquired using single-echo multi-band EPI with the following parameters: TR = 680ms, multiband factor = 8, echo time = 30ms, flip angle = 53 degrees, field of view = 220mm, 2.2 x 2.2 x 2.2 isotropic voxels with 64 slices. The data was already preprocessed using fMRIprep as described in #cite(<mumford.etal_2023a>, form: "prose"):
+The dataset consists of 110 subjects completing a Stroop task @stroop_1935. During the Stroop task, participants are asked to name the font color of stimuli that are either congruent (e.g. the word green written with the font color green) or incongruent (e.g. the word green written in the font color red). Participants were presented with 96 trials and exhibited a mean reaction time of \~0.691 seconds. fMRI signals were acquired using single-echo multi-band EPI with the following parameters: TR = 680ms, multiband factor = 8, echo time = 30ms, flip angle = 53 degrees, field of view = 220mm, 2.2 x 2.2 x 2.2 isotropic voxels with 64 slices. The data was already preprocessed using fMRIprep as described in #cite(<mumford.etal_2023a>, form: "prose"):
 #quote(attribution: [@mumford.etal_2023a])[Data were preprocessed in Python using fmriprep 20.2.0 @esteban.etal_2019. First, a reference volume and its skull stripped version were generated using a custom methodology of fMRIPrep. A B0-nonuniformity map (or fieldmap) was directly measured with an MRI scheme designed with that purpose (typically, a spiral pulse sequence). The fieldmap was then co-registered to the target EPI (echo-planar imaging) reference run and converted to a displacements field map (amenable to registration tools such as ANTs) with FSL’s fugue and other SDCflows tools. Based on the estimated susceptibility distortion, a corrected EPI (echo-planar imaging) reference was calculated for a more accurate co-registration with the anatomical reference. The BOLD reference was then co-registered to the T1w reference using bbregister (FreeSurfer) which implements boundary-based registration @greve.fischl_2009. Co-registration was configured with six degrees of freedom. Head-motion parameters with respect to the BOLD reference (transformation matrices, and six corresponding rotation and translation parameters) are estimated before any spatiotemporal filtering using mcflirt (FSL 5.0.9, #cite(<jenkinson.etal_2002>, form: "author"), #cite(<jenkinson.etal_2002>, form: "year")). BOLD runs were slice-time corrected using 3dTshift from AFNI 20160207 (#cite(<cox.hyde_1997>, form: "prose"), RRID:SCR_005927). The BOLD time-series (including slice-timing correction when applied) were resampled onto their original, native space by applying a single, composite transform to correct for head-motion and susceptibility distortions. These resampled BOLD time-series will be referred to as preprocessed BOLD in original space, or just pre-processed BOLD. The BOLD time-series were resampled into standard space, generating a preprocessed BOLD run in MNI152NLin2009cAsym space. First, a reference volume and its skull-stripped version were generated using a custom methodology of fMRIPrep. Automatic removal of motion artifacts using independent component analysis (ICA-AROMA, #cite(<pruim.etal_2015>, form: "author"), #cite(<pruim.etal_2015>, form: "year")) was performed on the preprocessed BOLD on MNI space time-series after removal of non-steady state volumes and spatial smoothing with an isotropic, Gaussian kernel of 6mm FWHM (full-width half-maximum). Cor responding “non-aggresively” denoised runs were produced after such smoothing. These data were used in our time series analysis models.]
 For more details of the data collection and preprocessing pipeline, please see #cite(<mumford.etal_2023a>, form: "prose").
 
-After fMRIPrep, we read the preprocessed functional data into Julia #cite(<bezanson2017julia>) using the NIfTI.jl package (v.0.6.1, #cite(<JuliaNeuroscienceNIfTIjl2025>, form: "year")). Next, to simplify the analysis and increase SNR, we performed a region of interes (ROI) analysis based on the 100-parcellation of the Schaefer 2018 atlas @schaefera.etal_2018. Based on #cite(<mumford.etal_2023a>, form: "prose"), we expected duration effects to result in widespread activity across the brain. We averaged voxels inside each ROI and used a 4th-order Butterworth highpass at a -3db cutoff of 1/128s to remove slow drifts from the BOLD signal @_2025a. For the RT-covariate, we used a winsorization proceduce, effectively clipping the highest and lowest 5% RTs. RTs were then mean-centered and normalized to changes in standard deviation to align RT distributions over subjects. To fit the deconvolution model, we used an finite impulse response (FIR) basis function with 24 lags, starting from -0.68 to 14.96 seconds at a TR of 0.68s. While we found similar results using a HRF basis function with the standard SPM parameterization, we think based on prior work that a non-linear scaling of the BOLD function is not an adequate model of the underlying data @jackgrinband.etal_2008.
-//To fit the deconvolution model, we used an HRF basis function with the standard SPM parameterization (the full parameters can be found in the appendix @HRF) 
+After fMRIPrep, we read the preprocessed functional data into Julia #cite(<bezanson2017julia>) using the NIfTI.jl package (v.0.6.1, #cite(<JuliaNeuroscienceNIfTIjl2025>, form: "year")). Next, to simplify the analysis and increase SNR, we performed a region of interest (ROI) analysis based on the 100-parcellation of the Schaefer 2018 atlas @schaefera.etal_2018. Based on #cite(<mumford.etal_2023a>, form: "prose"), we expected duration effects to result in widespread activity across the brain. We averaged voxels inside each ROI and used a 4th-order Butterworth high-pass at a -3db cutoff of 1/128s to remove slow drifts from the BOLD signal @_2025a. For the RT-covariate, we #rev2[applied a 90% winsorization, transforming RT values above the 95th percentile into the 95th percentile and RT values below the 5th percentile into the 5th percentile, making subsequent statistical analysis more robust towards outliers @tukey.mclaughlin_1963.] #rev2[The winsorized] RTs were then mean-centered and normalized to changes in standard deviation to align RT distributions over subjects. #rev2[After a reviewer's comment, we also explored using a more conservative winsorization of 80% (i.e. winsorizing values above the 90th and below the 10th percentile), as well as a more robust way to center and normalize the 90% winsorization, namely median-centered and a normalization to changes in the median absolute deviation. Both approaches actually decreased p-values (especially of the non-linear model), however to avoid the malpractice of p-hacking @stefan.schonbrodt_2023, we only report on these results in Supplemental File @fMRI-stand.] 
+To fit the deconvolution model, we used an finite impulse response (FIR) basis function with 24 lags, starting from -0.68 to 14.96 seconds at a TR of 0.68s. While we found similar results using a HRF basis function with the standard SPM parameterization, we think based on prior work that a non-linear scaling of the BOLD function is not an adequate model of the underlying data @jackgrinband.etal_2008.
+//To fit the deconvolution model, we used an HRF basis function with the standard SPM parameterization (the full parameters can be found in the Supplemental File @HRF) 
 To specify and estimate the models we used Unfold.jl (v0.8.4, #cite(<ehingerUnfoldjlEventrelatedRegression2025>, form: "author"), #cite(<ehingerUnfoldjlEventrelatedRegression2025>, form: "year")) and UnfoldBIDS.jl (0.3.3, #cite(<ehingerUnfoldBIDS2025>, form: "author"), #cite(<ehingerUnfoldBIDS2025>, form: "year")). We expanded the FIR kernel to model the RT effect with a B-spline set of five splines, and additionally an effect of condition according to the following Wilkinson Formula: 
 
 $ italic("BOLD") ~ 1 + italic("spl"("response_time", 5)) + italic("condition") $
@@ -303,7 +356,7 @@ Optional Parameters p:
 */
 == Results
 
-#cite(<mumford.etal_2023a>, form: "prose") established a reaction time effect in multiple different experimental paradigms. Here, we re-analyzed their dataset using a ROI approach, and successfully reproduced this wide-ranging reaction time effect for the Stroop task (@fMRI_results\.A). Next, we replaced the linear term with a non-linearity via a spline-set. Again, we find a wide-spread reaction time effect, albeit, using a strict multiple-correction control, only significant in three ROIs. Comparing results from a model using a linear predictor with a model using a non-linear predictor (@fMRI_results\.C), it is visible that the non-linear model captures a non-linear pattern in the BOLD time course, which a linear predictor cannot. Note that with our B-spline basis, it is not straightforward to test the superiority of the non-linear over the linear model, and we leave this for future studies. Further note, that we have very little data (~10min) to estimate such a non-linear effect, which resulted in lower power, as indicated by larger p-values (@fMRI_results\.B). In summary, we succeeded in our main goal to demonstrate the feasibility of combining overlap correction and duration modelling for fMRI data.
+#cite(<mumford.etal_2023a>, form: "prose") established a reaction time effect in multiple different experimental paradigms. Here, we re-analyzed their dataset using a ROI approach, and successfully reproduced this wide-ranging reaction time effect for the Stroop task (@fMRI_results\.A). Next, we replaced the linear term with a non-linearity via a spline-set. Again, we find a wide-spread reaction time effect, albeit, using a strict multiple-correction control, only significant in three ROIs. Comparing results from a model using a linear predictor with a model using a non-linear predictor (@fMRI_results\.C), it is visible that the non-linear model captures a non-linear pattern in the BOLD time course, which a linear predictor cannot. Note that with our B-spline basis, it is not straightforward to test the superiority of the non-linear over the linear model, and we leave this for future studies. Further note, that we have very little data (~10min) to estimate such a non-linear effect, which resulted in lower power, as indicated by larger p-values (@fMRI_results\.B). In summary, we succeeded in our main goal to demonstrate the feasibility of combining overlap correction and duration modeling for fMRI data.
 
 
 ]
@@ -397,7 +450,7 @@ First is the investigation of local field potentials (LFP). This should come as 
 Secondly, pupil dilation measurements could benefit from our analysis approach as well. Typically, pupil dilation is taken as an indirect measurement of arousal states, cognitive load, and has been linked to changes in the noradrenergic system @larsen.waters_2018. Whereas pupil dilation has often been related to reaction time @hershman.henik_2019 @isabella.etal_2019 @strauch.etal_2020, #rev[to our knowledge no study so far has modeled reaction time explicitly]. At least one theory-driven model has been proposed which offers explanations for a wider range of parameters, including trial duration @burlingham.etal_2022. However, again overlapping signals are dismissed in this model, #rev[and] as such our more general approach is to be preferred.
 
 
-// #rev[Taking a step back, we can further relate the modelling of reaction times directly to intra and inter-subject variabilities. Especially in the context of hierarchical models (Yarkoni 2019).
+// #rev[Taking a step back, we can further relate the modeling of reaction times directly to intra and inter-subject variabilities. Especially in the context of hierarchical models (Yarkoni 2019).
 
 
  // duration effects (e.g. RT), do not have to be on the same scale, e.g. some subject 100-300ms others 200-400ms. There could be an effect of mean RT over subjects, and a individual effect of RT within subjects. Our centering approach focuses on the latter
@@ -441,8 +494,9 @@ Funded by Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) unde
 
 #bibliography(title:"Bibliography", style:"american-psychological-association", "2024UnfoldDuration.bib")
 
-#show: arkheion-appendices
-=
+#show: supplemental
+
+= 
 
 == Noise Preprocessing <NoiseAp>
 
@@ -501,6 +555,34 @@ Baseline was corrected for each marginalized ERP independently in with a baselin
 )
 
 #pagebreak()
+
+== Alternative visualization of results from one simulation <alt> 
+
+#figure(
+  muchpdf(
+    read("assets/2025-10-02-review-fig4.pdf", encoding: none),
+    width: 100%,
+  ),
+  caption: [Alternative version of @Quali for model comparison. Here, each panel corresponds to one of three specific durations (out of 15 marginalized effects), and all models (distinguished by color) are superimposed onto the ground truth (black line). Solid lines indicate overlap corrected models; dashed lines indicate not overlap corrected models.]
+)
+
+== Alternative reaction time standardization during fMRI analysis <fMRI-stand>
+
+=== 80% Winsorization
+#figure(
+  image("assets/2025-10-06_fmri-figure-duration-20Winsor.svg", width: 100%),
+  caption: [fMRI results #emph[after a reaction time standardization with a more stringent setting of an 80% winsorization (i.e. the highest and lowest 10th percentile is winsorized; see @fMRI_results & @fMRI)].
+ (A) One slice of the transverse, coronal, and sagittal planes with ROIs colored according to their minimal p-value over time, uncorrected. Grey areas indicate p-value > 10#super[-3].  Indicated Bonferroni threshold was calculated over time and ROI ($alpha=0.05 / 24 x 100$). Marked regions (black outline) were significant under FDR correction over time and ROI. (B) Uncorrected p-values over time for all ROIs, with a linear model (black) and non-linear model (orange). The dashed line indicates the cut off for p-values after Bonferroni correction. (C) Marginal effects of the estimated BOLD response of one example region (gray outlined in A), for the linear (left) and non-linear (right) model.],
+)
+
+=== Median + Median Absolute Deviation
+#figure(
+  image("assets/2025-10-07_fmri-figure-duration-median.svg", width: 100%),
+  caption: [fMRI results #emph[after a reaction time standardization with a more robust measure and measure of spread: median and median absolute deviation; see @fMRI_results and @fMRI).] (A) One slice of the transverse, coronal, and sagittal planes with ROIs colored according to their minimal p-value over time, uncorrected. Grey areas indicate p-value > 10#super[-3].  Indicated Bonferroni threshold was calculated over time and ROI ($alpha=0.05 / 24 x 100$). Marked regions (black outline) were significant under FDR correction over time and ROI. (B) Uncorrected p-values over time for all ROIs, with a linear model (black) and non-linear model (orange). The dashed line indicates the cut off for p-values after Bonferroni correction. (C) Marginal effects of the estimated BOLD response of one example region (gray outlined in A), for the linear (left) and non-linear (right) model.],
+)
+
+
+#pagebreak()
 == HRF Parameters <HRF>
 #list(
   [p(1) - delay of response (relative to onset): 6],
@@ -511,3 +593,4 @@ Baseline was corrected for each marginalized ERP independently in with a baselin
   [p(6) - onset {seconds}: 0],
   [p(7) - length of kernel {seconds}: 32],
 )
+
